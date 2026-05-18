@@ -9,14 +9,14 @@ import "../BaseElements"
 import "../../common"
 
 Column {
-    spacing: 7
-
     Rectangle {
         anchors.left: parent.left
         anchors.right: parent.right
-        height: mainContent.implicitHeight + 18
-        radius: 26
-        color: appWindow.theme.background
+        height: mainContent.height + 12*appWindow.zoom
+        radius: (appWindow.uiver === 1 ? 26 : 16)*appWindow.zoom
+        color: appWindow.uiver === 1 ?
+                   appWindow.theme.background :
+                   appWindow.theme_v2.bgColor
         Rectangle {
             width: parent.width
             height: parent.height / 2
@@ -29,16 +29,17 @@ Column {
 
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.leftMargin: 20
-            anchors.rightMargin: 20
+            anchors.leftMargin: (appWindow.uiver === 1 ? 20 : appWindow.theme_v2.mainContentMargins)*appWindow.zoom
+            anchors.rightMargin: anchors.leftMargin
             columns: 2
+            rowSpacing: 0
 
             Item {implicitHeight: 10; implicitWidth: 1}
             Item {implicitHeight: 10; implicitWidth: 1}
 
-            BaseLabel {
+            BasePageLabel {
                 text: qsTr("Language") + App.loc.emptyString
-                font.pixelSize: 16
+                font: uicore.buildFont({}, (appWindow.uiver === 1 ? 16 : appWindow.theme_v2.fontSize)*appWindow.fontZoom)
                 Layout.fillWidth: true
                 MouseArea {
                     anchors.fill: parent
@@ -54,20 +55,26 @@ Column {
                 {
                     id: currentLngRow
 
-                    Rectangle {
-                        clip: true
-                        color: "transparent"
-                        implicitWidth: 18
-                        implicitHeight: 10
+                    Item {
+                        implicitWidth: flagImg.preferredWidth
+                        implicitHeight: flagImg.preferredHeight
                         WaSvgImage {
+                            id: flagImg
+                            visible: appWindow.uiver === 1
                             source: Qt.resolvedUrl("../../images/flags/" + App.loc.currentTranslation + ".svg")
+                            zoom: appWindow.zoom
+                        }
+                        RoundedImageEffect {
+                            enabled: appWindow.uiver !== 1
+                            source: flagImg
+                            radius: 2*appWindow.zoom
                         }
                     }
 
                     BaseLabel {
                         text: App.loc.translationLanguageString(App.loc.currentTranslation) + " (" + App.loc.translationCountryString(App.loc.currentTranslation) + ")"
-                        font.capitalization: Font.Capitalize
-                        font.pixelSize: 16
+                        font: uicore.buildFont({capitalization: Font.Capitalize},
+                                               (appWindow.uiver === 1 ? 16 : appWindow.theme_v2.fontSize)*appWindow.fontZoom)
                     }
                 }
 
@@ -78,7 +85,7 @@ Column {
             }
 
             Item {visible: App.loc.needRestart; implicitHeight: 10; implicitWidth: 1}
-            RestartRequiredLabel {visible: App.loc.needRestart}
+            RestartRequiredLabel {visible: App.loc.needRestart; Layout.topMargin: 5*appWindow.zoom}
         }
     }
 

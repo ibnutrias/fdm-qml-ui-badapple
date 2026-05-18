@@ -11,6 +11,8 @@ BaseBaseErrorLabel
 
     spacing: 3
 
+    showIcon: appWindow.uiver === 1
+
     Image
     {
         visible: root.showIcon
@@ -34,10 +36,12 @@ BaseBaseErrorLabel
         clip: true
         elide: Text.ElideRight
         text: root.errorText
-        color: appWindow.theme.errorMessage
+        color: appWindow.uiver === 1 ?
+                   appWindow.theme.errorMessage :
+                   appWindow.theme_v2.danger
         verticalAlignment: Text.AlignVCenter
-        font.pixelSize: 14
-        font.weight: Font.Light
+        font: uicore.buildFont({weight: appWindow.uiver === 1 ? Font.Light : Font.Medium},
+                               (appWindow.uiver === 1 ? 14 : (appWindow.theme_v2.fontSize-2))*appWindow.fontZoom)
         wrapMode: root.shortVersion ? Text.NoWrap : Text.WordWrap
         onLinkActivated: root.onErrorLinkActivated()
     }

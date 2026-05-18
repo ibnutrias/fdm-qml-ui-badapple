@@ -18,6 +18,8 @@ Item {
 
     anchors.fill: parent
 
+    implicitHeight: tableHeader.implicitHeight + listView.implicitHeight
+
     RowLayout {
         id: tableHeader
         width: parent.width
@@ -72,6 +74,7 @@ Item {
             id: listView
             model: myModel
             anchors.fill: parent
+            implicitHeight: contentHeight
 
             ScrollBar.vertical: ScrollBar{}
 
@@ -142,7 +145,7 @@ Item {
                         BaseCheckBox {
                             tristate: true
                             Layout.alignment: Qt.AlignTop
-                            size: !model.level && model.folder ? 14 : 12
+                            indicatorSize: !model.level && model.folder ? 14 : 12
                             checkState: model.priority == AbstractDownloadsUi.DownloadPriorityDontDownload ? Qt.Unchecked :
                                 (model.folder && model.priority == AbstractDownloadsUi.DownloadPriorityUnknown
                                     && model.childrenHasDontDownloadPriority ? Qt.PartiallyChecked : Qt.Checked )
@@ -293,7 +296,7 @@ Item {
                                     text: modelData.text
                                     verticalAlignment: Text.AlignVCenter
                                     horizontalAlignment: Text.AlignLeft
-                                    font.weight: index === priorityCombo.currentIndex ? Font.DemiBold : Font.Normal
+                                    font: uicore.buildFont({weight: index === priorityCombo.currentIndex ? Font.DemiBold : Font.Normal})
                                 }
                             }
 

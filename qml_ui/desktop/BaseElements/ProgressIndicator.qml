@@ -10,7 +10,7 @@ Loader
     property bool inProgress: true
     property bool small: true
 
-    source: Qt.resolvedUrl(appWindow.uiver === 1 ? "DownloadsItemProgressIndicator.qml" : "V2/SlimProgressBar_V2.qml")
+    source: Qt.resolvedUrl(appWindow.uiver === 1 ? "DownloadsItemProgressIndicator.qml" : "../../common/V2/SlimProgressBar_V2.qml")
 
     onItemChanged:
     {
@@ -29,6 +29,7 @@ Loader
             item.indeterminate = Qt.binding(() => root.infinityIndicator);
             item.value = Qt.binding(() => root.percent);
             item.running = Qt.binding(() => root.inProgress);
+            item.zoom = Qt.binding(() => appWindow.zoom);
         }
     }
 }

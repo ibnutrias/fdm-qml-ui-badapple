@@ -78,7 +78,7 @@ Item {
                         Label {
                             id: label
                             text: labelText
-                            font.pixelSize: 18
+                            font.pixelSize: 18*appWindow.fontZoom
                             color: appWindow.theme.voteDialogText
                             wrapMode: Text.WordWrap
                             width: actionElement.width - 30 - 30 - 25 - 5

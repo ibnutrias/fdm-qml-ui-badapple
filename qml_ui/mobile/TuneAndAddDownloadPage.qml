@@ -8,7 +8,9 @@ import QtQuick.Controls.Material
 import "../common"
 import "../common/Tools"
 import "./BaseElements"
+import "./BaseElements/V2"
 import "./FilesTree"
+import "./FilesTree/V2"
 import "./Dialogs"
 
 Page {
@@ -18,56 +20,63 @@ Page {
     property double requestId: -1
     property var storages: []
 
-    header: BaseToolBar {
-        RowLayout {
-            anchors.fill: parent
+    readonly property bool showFileStatus: downloadTools.fileSize >= 0 ||
+                                           downloadTools.freeDiskSpace >= 0 ||
+                                           !downloadTools.hasWriteAccess
 
-            ToolbarBackButton {
-                onClicked: downloadTools.doReject()
-            }
+    readonly property string fileStatusText: (!downloadTools.hasWriteAccess ? qsTr("No write access to the selected directory") :
+           (downloadTools.freeDiskSpace >= 0 && downloadTools.fileSize >= 0) ? qsTr("Size: %1 (Disk space: %2)").arg(App.bytesAsText(downloadTools.fileSize)).arg(App.bytesAsText(downloadTools.freeDiskSpace)) :
+           downloadTools.freeDiskSpace >= 0 ? qsTr("Disk space: %1").arg(App.bytesAsText(downloadTools.freeDiskSpace)) :
+           downloadTools.fileSize >= 0 ? qsTr("Size: %1").arg(App.bytesAsText(downloadTools.fileSize)) :
+           "") + App.loc.emptyString
 
-            ToolbarLabel {
-                text: qsTr("New file") + App.loc.emptyString
-                Layout.fillWidth: true
-            }
+    readonly property color fileStatusColor: !downloadTools.hasWriteAccess || downloadTools.notEnoughSpaceWarning ?
+                                                 (appWindow.uiver === 1 ? appWindow.theme.errorMessage : appWindow.theme_v2.danger) :
+                                                 (appWindow.uiver === 1 ? appWindow.theme.foreground : appWindow.theme_v2.textColor2)
 
-            DialogButton {
-                text: qsTr("Download") + App.loc.emptyString
-                Layout.rightMargin: qtbug.rightMargin(0, 10)
-                Layout.leftMargin: qtbug.leftMargin(0, 10)
-                textColor: appWindow.theme.toolbarTextColor
-                onClicked: accept()
-                enabled: saveTo.currentText.length > 0 && downloadTools.hasWriteAccess
-            }
-        }
+    header: Loader
+    {
+        source: Qt.resolvedUrl(appWindow.uiver === 1 ?
+                                   "TuneAndAddDownloadPageHeader.qml" :
+                                   "V2/TuneAndAddDownloadPageHeader_V2.qml")
     }
 
-    ColumnLayout {
+    ColumnLayout
+    {
         anchors.fill: parent
-        anchors.topMargin: 20
-        anchors.leftMargin: appWindow.showBordersInDownloadsList ? parent.width * 0.1 : 0
-        anchors.rightMargin: appWindow.showBordersInDownloadsList ? parent.width * 0.1 : 0
-        spacing: 10
 
-        Column {
-            id:saveColumn
+        anchors.margins: appWindow.uiver === 1 ? 14 : appWindow.theme_v2.mainContentMargins*appWindow.zoom
+
+        anchors.leftMargin: appWindow.uiver === 1 ?
+                                20 :
+                                appWindow.theme_v2.mainContentMargins*appWindow.zoom
+
+        anchors.rightMargin: appWindow.uiver === 1 ?
+                                 20 :
+                                 appWindow.theme_v2.mainContentMargins*appWindow.zoom
+
+        spacing: appWindow.uiver === 1 ? 10 : 16*appWindow.zoom
+
+        ColumnLayout
+        {
             spacing: 2
             Layout.fillWidth: true
-            Layout.leftMargin: 20
-            Layout.rightMargin: 20
 
-            Label {
+            BasePageLabel
+            {
                 text: qsTr("Save to") + App.loc.emptyString
-                anchors.left: parent.left
+                font: uicore.buildFont({}, uicore.fontSizeV1(16*appWindow.fontZoom))
             }
 
-            RowLayout {
-                width: parent.width
+            RowLayout
+            {
+                Layout.fillWidth: true
 
-                BaseComboBox {
+                BaseComboBox
+                {
                     id: saveTo
                     Layout.fillWidth: true
-                    fontSize: 13
+                    font: uicore.buildFont({}, uicore.fontSizeV1(13)*appWindow.fontZoom)
                     onAccepted: accept()
                     onCurrentTextChanged: queryBytesAvailable()
                     delegate: Rectangle {
@@ -82,7 +91,7 @@ Page {
                                 Layout.fillWidth: true
                                 Layout.alignment: Qt.AlignVCenter
                                 text: modelData.text
-                                font.pixelSize: saveTo.fontSize
+                                font: saveTo.font
                                 horizontalAlignment: Text.AlignLeft
                                 elide: Text.ElideRight
                                 MouseArea {
@@ -130,16 +139,12 @@ Page {
                     }
                 }
 
-                RoundButton {
+                DialogFlatButton
+                {
                     visible: !App.rc.client.active
-                    radius: 40
-                    width: 40
-                    height: 40
-                    flat: true
-                    icon.source: Qt.resolvedUrl("../images/download-item/folder.svg")
-                    icon.color: appWindow.theme.foreground
-                    icon.width: 18
-                    icon.height: 18
+                    iconSource: Qt.resolvedUrl(appWindow.uiver === 1 ?
+                                                   "../images/download-item/folder.svg" :
+                                                   "V2/open_folder.svg")
                     onClicked: {
                         stackView.waPush(filePicker.filePickerPageComponent, {folder: saveTo.model[saveTo.currentIndex].path, initiator: "addDownload", downloadId: -1});
                     }
@@ -147,17 +152,15 @@ Page {
             }
         }
 
-        Column {
-            id: fileNameColumn
+        ColumnLayout
+        {
             visible: downloadTools.filesCount === 1 || downloadTools.batchDownload
             Layout.fillWidth: true
-            Layout.leftMargin: 20
-            Layout.rightMargin: 20
             spacing : 2
-            width: parent.width
-            Label {
-                anchors.left: parent.left
+            BasePageLabel
+            {
                 text: qsTr("File name") + App.loc.emptyString
+                font: uicore.buildFont({}, uicore.fontSizeV1(16*appWindow.fontZoom))
             }
 
             BaseTextField {
@@ -173,6 +176,12 @@ Page {
             }
         }
 
+        BaseLabel {
+            visible: appWindow.uiver !== 1 && showFileStatus
+            color: fileStatusColor
+            text: fileStatusText
+        }
+
         BaseCheckBox {
             visible: !App.rc.client.active &&
                     !downloadTools.batchDownload &&
@@ -180,7 +189,8 @@ Page {
 
             text: qsTr("Play file while it is still downloading") + App.loc.emptyString
 
-            Layout.leftMargin: 20
+            Layout.fillWidth: true
+            wrapMode: Text.WordWrap
 
             onClicked: {
                 let info = App.downloads.creator.downloadInfo(downloadTools.requestId, 0);
@@ -202,51 +212,77 @@ Page {
             }
         }
 
-        Rectangle {
+        Rectangle
+        {
+            visible: filesTree.item.downloadInfo && filesTree.item.downloadInfo.filesCount > 1
+
             color: 'transparent'
-            Layout.topMargin: 5
+            border.color: appWindow.uiver === 1 ? appWindow.theme.border : "transparent"
+
+            implicitHeight: filesTree.item.implicitHeight
+
             Layout.fillHeight: true
             Layout.fillWidth: true
-            Layout.bottomMargin: 39
 
-            border.color: filesTree.visible ? appWindow.theme.border : "transparent"
-
-            FilesTree {
-                id: filesTree
-                visible: downloadInfo && downloadInfo.filesCount > 1
-                downloadInfo: null
-                createDownloadDialog: true
-
-                property var selectedSize: filesTree.downloadInfo ? filesTree.downloadInfo.selectedSize : -1
-                onSelectedSizeChanged: { downloadTools.fileSizeValueChanged(filesTree.selectedSize) }
-
-                Rectangle {
-                    height: 1
-                    width: parent.width
-                    anchors.top: parent.top
-                    color: appWindow.theme.border
+            Component
+            {
+                id: tree_v1
+                FilesTree
+                {
+                    downloadInfo: App.downloads.creator.downloadInfo(requestId, 0)
+                    createDownloadDialog: true
+                    property var selectedSize: downloadInfo ? downloadInfo.selectedSize : -1
+                    onSelectedSizeChanged: { downloadTools.fileSizeValueChanged(selectedSize) }
+                    Rectangle
+                    {
+                        height: 1
+                        width: parent.width
+                        anchors.top: parent.top
+                        color: appWindow.theme.border
+                    }
                 }
             }
+
+            Component
+            {
+                id: tree_v2
+                FilesTree_V2
+                {
+                    property var downloadInfo: App.downloads.creator.downloadInfo(requestId, 0)
+                    info: downloadInfo
+                    createDownloadDialog: true
+                    property var selectedSize: downloadInfo ? downloadInfo.selectedSize : -1
+                    onSelectedSizeChanged: { downloadTools.fileSizeValueChanged(selectedSize) }
+                }
+            }
+
+            Loader {
+                id: filesTree
+                sourceComponent: appWindow.uiver === 1 ? tree_v1 : tree_v2
+                anchors.fill: parent
+            }
         }
-    }
 
-    //file size
-    Rectangle {
-        visible: downloadTools.fileSize >= 0 || downloadTools.freeDiskSpace >= 0 || !downloadTools.hasWriteAccess
-        color: appWindow.theme.background
-        anchors.bottom: parent.bottom
-        width: parent.width
-        height: 40
+        DialogFlatButton_V2
+        {
+            visible: appWindow.uiver !== 1
+            text: qsTr("Download") + App.loc.emptyString
+            enabled: saveTo.currentText.length > 0 && downloadTools.hasWriteAccess
+            primary: true
+            onClicked: accept()
+            Layout.fillWidth: true
+            Layout.minimumHeight: 40*appWindow.zoom
+        }
 
+        Item {Layout.fillHeight: true}
+
+        //file status
         BaseLabel {
-            anchors.centerIn: parent
-            color: !downloadTools.hasWriteAccess || downloadTools.notEnoughSpaceWarning ? appWindow.theme.errorMessage : appWindow.theme.foreground
-            text: (!downloadTools.hasWriteAccess ? qsTr("No write access to the selected directory") :
-                   (downloadTools.freeDiskSpace >= 0 && downloadTools.fileSize >= 0) ? qsTr("Size: %1 (Disk space: %2)").arg(App.bytesAsText(downloadTools.fileSize)).arg(App.bytesAsText(downloadTools.freeDiskSpace)) :
-                   downloadTools.freeDiskSpace >= 0 ? qsTr("Disk space: %1").arg(App.bytesAsText(downloadTools.freeDiskSpace)) :
-                   downloadTools.fileSize >= 0 ? qsTr("Size: %1").arg(App.bytesAsText(downloadTools.fileSize)) :
-                   "") + App.loc.emptyString
-            font.pixelSize: 14
+            visible: appWindow.uiver === 1 && showFileStatus
+            Layout.alignment: Qt.AlignHCenter
+            color: fileStatusColor
+            text: fileStatusText
+            font: uicore.buildFont({}, 14*appWindow.fontZoom)
         }
     }
 
@@ -273,9 +309,7 @@ Page {
     }
 
     onRequestIdChanged: {
-        var info = App.downloads.creator.downloadInfo(requestId, 0);
-        filesTree.downloadInfo = info;
-        schedulerTools.buildScheduler([info.id]);
+        schedulerTools.buildScheduler([requestId]);
     }
 
     Component.onCompleted: {

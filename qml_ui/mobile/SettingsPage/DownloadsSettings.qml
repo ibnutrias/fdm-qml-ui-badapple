@@ -8,15 +8,12 @@ import org.freedownloadmanager.fdm.dmcoresettings
 import "."
 import "../BaseElements/"
 
-Page {
+BaseSettingsPage {
     id: root
 
-    property var storages: []
+    title: qsTr("Downloads settings") + App.loc.emptyString
 
-    header: PageHeaderWithBackArrow {
-        pageTitle: qsTr("Downloads settings") + App.loc.emptyString
-        onPopPage: root.StackView.view.pop()
-    }
+    property var storages: []
 
     Rectangle {
         id: settingsWraper
@@ -52,7 +49,9 @@ Page {
                     }
                 }
 
-                SettingsSeparator{}
+                SettingsSeparator{
+                    visible: appWindow.uiver === 1
+                }
 
                 SwitchSetting {
                     description: qsTr("Automatically remove deleted files from download list") + App.loc.emptyString
@@ -63,7 +62,9 @@ Page {
                     }
                 }
 
-                SettingsSeparator{}
+                SettingsSeparator{
+                    visible: appWindow.uiver === 1
+                }
 
                 SwitchSetting {
                     id: removeFinished
@@ -81,9 +82,10 @@ Page {
                     visible: removeFinished.switchChecked
                     leftPadding: qtbug.leftPadding(40, 0)
                     rightPadding: qtbug.rightPadding(40, 0)
-                    spacing: 3
+                    bottomPadding: 15*appWindow.zoom
+                    spacing: 8*appWindow.zoom
 
-                    SettingsRadioButton {
+                    BaseRadioButton {
                         id: removeFinishedImmediately
                         text: qsTr("Immediately") + App.loc.emptyString
                         checked: !parseInt(App.settings.dmcore.value(DmCoreSettings.AutoRemoveFinishedDownloads_KeepDays))
@@ -100,7 +102,7 @@ Page {
                         implicitHeight: 1
                     }
 
-                    SettingsRadioButton {
+                    BaseRadioButton {
                         id: removeFinishedIn
                         checked: !removeFinishedImmediately.checked
                         //: Automatically remove finished downloads In N days
@@ -120,7 +122,7 @@ Page {
                         }
                     }
 
-                    SettingsTextField {
+                    BaseTextField {
                         id: removeFinishedInDays
                         enabled: removeFinishedIn.checked
                         text: parseInt(App.settings.dmcore.value(DmCoreSettings.AutoRemoveFinishedDownloads_KeepDays)) ?
@@ -148,7 +150,9 @@ Page {
                     }
                 }
 
-                SettingsSeparator{}
+                SettingsSeparator{
+                    visible: appWindow.uiver === 1
+                }
 
                 SwitchSetting {
                     description: qsTr("Automatically retry failed downloads") + App.loc.emptyString
@@ -161,7 +165,9 @@ Page {
                     }
                 }
 
-                SettingsSeparator{}
+                SettingsSeparator{
+                    visible: appWindow.uiver === 1
+                }
 
                 SwitchSetting {
                     description: qsTr("Do not download web pages") + App.loc.emptyString
@@ -174,7 +180,9 @@ Page {
                     }
                 }
 
-                SettingsSeparator{}
+                SettingsSeparator{
+                    visible: appWindow.uiver === 1
+                }
 
                 SwitchSetting {
                     description: qsTr("Use server time for file creation") + App.loc.emptyString
@@ -187,7 +195,10 @@ Page {
                     }
                 }
 
-                SettingsSeparator{}
+                SettingsSeparator{
+                    x: appWindow.uiver === 1 ? 0 : appWindow.theme_v2.mainContentMargins*appWindow.zoom
+                    width: parent.width - 2*x
+                }
 
                 SettingsGroupHeader {
                     name: qsTr("Default download folder") + App.loc.emptyString
@@ -199,9 +210,8 @@ Page {
                     id: autoFolderRadioBtn
                     text: qsTr("Choose default download folder automatically") + App.loc.emptyString
                     checked: !fixedFolderRadioBtn.checked
-                    leftPadding: qtbug.leftPadding(20, 0)
-                    rightPadding: qtbug.rightPadding(20, 0)
-                    font.pixelSize: 16
+                    leftPadding: qtbug.leftPadding((appWindow.uiver === 1 ? 20 : appWindow.theme_v2.mainContentMargins)*appWindow.zoom, 0)
+                    rightPadding: qtbug.rightPadding((appWindow.uiver === 1 ? 20 : appWindow.theme_v2.mainContentMargins)*appWindow.zoom, 0)
                     width: parent.width
                     onCheckedChanged: {
                         if (checked)
@@ -214,7 +224,7 @@ Page {
                     description: qsTr("Suggest folders based on file type") + App.loc.emptyString
                     enabled: autoFolderRadioBtn.checked
                     switchChecked: App.settings.toBool(App.settings.dmcore.value(DmCoreSettings.DownloadPathDependsOnFileType))
-                    anchors.leftMargin: 25
+                    anchors.leftMargin: ((appWindow.uiver === 1 ? 20 : appWindow.theme_v2.mainContentMargins) + 5)*appWindow.zoom
                     onClicked: {
                         switchChecked = !switchChecked;
                         App.settings.dmcore.setValue(
@@ -223,14 +233,16 @@ Page {
                     }
                 }
 
-                SettingsSeparator{}
+                SettingsSeparator{
+                    visible: appWindow.uiver === 1
+                }
 
                 SwitchSetting {
                     id: switchSetting2
                     description: qsTr("Suggest folders based on download URL") + App.loc.emptyString
                     enabled: autoFolderRadioBtn.checked
                     switchChecked: App.settings.toBool(App.settings.dmcore.value(DmCoreSettings.DownloadPathDependsOnSourceUrl))
-                    anchors.leftMargin: 25
+                    anchors.leftMargin: ((appWindow.uiver === 1 ? 20 : appWindow.theme_v2.mainContentMargins) + 5)*appWindow.zoom
                     onClicked: {
                         switchChecked = !switchChecked;
                         App.settings.dmcore.setValue(
@@ -239,7 +251,9 @@ Page {
                     }
                 }
 
-                SettingsSeparator{}
+                SettingsSeparator {
+                    visible: appWindow.uiver === 1
+                }
 
                 SettingsRadioButton
                 {
@@ -250,16 +264,19 @@ Page {
                         if (checked)
                             fixedFolderCombo.apply();
                     }
-                    leftPadding: qtbug.leftPadding(20, 0)
-                    rightPadding: qtbug.rightPadding(20, 0)
+                    leftPadding: qtbug.leftPadding((appWindow.uiver === 1 ? 20 : appWindow.theme_v2.mainContentMargins)*appWindow.zoom, 0)
+                    rightPadding: qtbug.rightPadding((appWindow.uiver === 1 ? 20 : appWindow.theme_v2.mainContentMargins)*appWindow.zoom, 0)
                     topPadding: 20
-                    font.pixelSize: 16
                     width: parent.width
                 }
 
                 FixedDownloadFolderCombobox {
                     id: fixedFolderCombo
                     enabled: fixedFolderRadioBtn.checked
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.leftMargin: ((appWindow.uiver === 1 ? 20 : appWindow.theme_v2.mainContentMargins)*2 + 5)*appWindow.zoom
+                    anchors.rightMargin: (appWindow.uiver === 1 ? 20 : appWindow.theme_v2.mainContentMargins)*appWindow.zoom
                 }
 
                 Item {implicitHeight: 20; implicitWidth: 1}

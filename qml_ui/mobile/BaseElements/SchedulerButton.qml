@@ -3,17 +3,21 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Effects
 import org.freedownloadmanager.fdm
+import "V2"
 
 Rectangle {
     id: root
     color: 'transparent'
     Layout.topMargin: 5
-    Layout.leftMargin: 20
     Layout.preferredHeight: 20
     Layout.fillWidth: true
 
     property bool highlighted
     signal clicked
+
+    readonly property color myColor: appWindow.uiver === 1 ?
+                                         (root.highlighted ? appWindow.theme.schedulerLabelText : appWindow.theme.schedulerLabelSelectedText) :
+                                         (root.highlighted ? appWindow.theme_v2.primary : appWindow.theme_v2.textColor)
 
     Item {
         anchors.left: parent.left
@@ -25,24 +29,22 @@ Rectangle {
             id: content
             spacing: 5
 
-            Image {
+            SvgImage_V2 {
                 id: img
-                sourceSize.width: 16
-                sourceSize.height: 16
-                source: Qt.resolvedUrl("../../images/mobile/scheduler.svg")
+                sourceSize: appWindow.uiver === 1 ?
+                                Qt.size(16,16) :
+                                Qt.size(width, height)
+                source: Qt.resolvedUrl(appWindow.uiver === 1 ?
+                                           "../../images/mobile/scheduler.svg" :
+                                           "V2/scheduler.svg")
                 Layout.alignment: Qt.AlignVCenter
-                layer {
-                    effect: MultiEffect {
-                        colorization: 1.0
-                        colorizationColor: root.highlighted ? appWindow.theme.schedulerLabelText : appWindow.theme.schedulerLabelSelectedText
-                    }
-                    enabled: true
-                }
+                imageColor: myColor
             }
 
-            Label {
+            BaseLabel {
                 text: qsTr("Scheduler") + App.loc.emptyString
-                color: root.highlighted ? appWindow.theme.schedulerLabelText : appWindow.theme.schedulerLabelSelectedText
+                color: myColor
+                font: uicore.buildFont({}, uicore.fontSizeV1(16*appWindow.fontZoom))
             }
         }
 

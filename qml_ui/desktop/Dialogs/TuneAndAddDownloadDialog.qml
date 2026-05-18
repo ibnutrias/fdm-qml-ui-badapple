@@ -51,6 +51,7 @@ BaseStandaloneCapableDialog {
             Flickable
             {
                 id: dlgContent
+                anchors.left: parent.left
                 width: parent.width + sbar.myWrapSize
                 height: parent.height
                 flickableDirection: Flickable.VerticalFlick
@@ -95,6 +96,10 @@ BaseStandaloneCapableDialog {
 
                     DownloadsList {
                         id: downloadsList
+                        visible: downloadTools.batchDownload
+                        Layout.topMargin: 8*appWindow.zoom
+                        Layout.fillWidth: true
+                        Layout.maximumHeight: appWindow.height/3
                     }
 
                     VideoQuality {

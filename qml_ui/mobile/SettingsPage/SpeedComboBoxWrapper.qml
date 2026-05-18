@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import org.freedownloadmanager.fdm.tum
+import "../BaseElements"
 
 Column {
     id: root
@@ -9,10 +10,10 @@ Column {
     property int speedLimitMode
     property int speedLimitSetting
 
-    Label
+    BasePageLabel
     {
         text: root.comboBoxText
-        font.pixelSize: 16
+        font: uicore.buildFont({}, (appWindow.uiver === 1 ? 16 : appWindow.theme_v2.fontSize)*appWindow.fontZoom)
         padding: 3
         anchors.left: parent.left
         horizontalAlignment: Text.AlignLeft

@@ -30,7 +30,7 @@ Item
             {text: sCustom, value: -1}
         ]
 
-        fontSize: 14
+        font: uicore.buildFont({}, uicore.fontSizeV1(14)*appWindow.fontZoom)
 
         onActivated: index => {
                          if (model[index].value === -1)
@@ -45,48 +45,40 @@ Item
                      }
     }
 
-    Dialog {
+    CenteredDialog {
         id: custom
         parent: Overlay.overlay
-
-
-        x: Math.round((appWindow.width - width) / 2)
-        y: Math.round((appWindow.height - height) / 2)
 
         modal: true
 
         title: qsTr("Custom value") + App.loc.emptyString
 
-        contentItem: RowLayout {
-            anchors.horizontalCenter: parent.horizontalCenter
-            spacing: 5
-
-            BaseTextField
-            {
-                id: value
-                Layout.fillWidth: true
-                inputMethodHints: Qt.ImhDigitsOnly | Qt.ImhNoPredictiveText | Qt.ImhSensitiveData
-                onAccepted: custom.tryAcceptValue()
-                font.pixelSize: 13
-                implicitWidth: 30
-                maximumLength: 6
-                horizontalAlignment: Text.AlignLeft
-            }
+        BaseTextField
+        {
+            id: value
+            Layout.fillWidth: true
+            Layout.maximumWidth: custom.ctMaxWidth
+            inputMethodHints: Qt.ImhDigitsOnly | Qt.ImhNoPredictiveText | Qt.ImhSensitiveData
+            onAccepted: custom.tryAcceptValue()
+            font: uicore.buildFont({}, (appWindow.uiver === 1 ? 13 : appWindow.theme_v2.fontSize)*appWindow.fontZoom)
+            Layout.minimumWidth: 30*appWindow.fontZoom
+            maximumLength: 6
+            horizontalAlignment: Text.AlignLeft
         }
 
-        footer: DialogButtonBox {
-            Button
+        BaseDialogButtonsLayout
+        {
+            BaseDialogButton
             {
                 id: okbtn
                 text: qsTr("OK") + App.loc.emptyString
-                flat: true
+                primary: true
                 onClicked: custom.tryAcceptValue()
             }
 
-            Button
+            BaseDialogButton
             {
                 text: qsTr("CANCEL") + App.loc.emptyString
-                flat: true
                 onClicked: custom.reject()
             }
         }
@@ -123,7 +115,6 @@ Item
         id: invalidValueDlg
         title: qsTr("Invalid value") + App.loc.emptyString
         text: qsTr("Must be a number greater than 0.") + App.loc.emptyString
-        buttons: buttonOk
     }
 
     function applyCurrentValueToCombo()

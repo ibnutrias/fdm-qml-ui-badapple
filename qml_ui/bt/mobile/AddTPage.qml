@@ -2,54 +2,43 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Controls.Material
-import "../../mobile/BaseElements"
-import "../../mobile/Dialogs"
 import org.freedownloadmanager.fdm
+import "../../mobile/BaseElements"
+import "../../mobile/BaseElements/V2"
+import "../../mobile/Dialogs"
 
-Page {
+BasePage {
     property var downloadIds
 
-    header: Column {
-        height: 108
-        width: parent.width
+    title: App.my_BT_qsTranslate("AddTrackersPage", "Add trackers") + App.loc.emptyString
 
-        BaseToolBar {
-            RowLayout {
-                anchors.fill: parent
+    v1_okButtonVisible: true
+    v1_okButtonEnabled: trackers.text.trim()
+    onV1_okButtonClicked: doOK()
+    goBackHandler: cancel
 
-                ToolbarBackButton {
-                    onClicked: cancel()
-                }
-
-                ToolbarLabel {
-                    text: App.my_BT_qsTranslate("AddTrackersPage", "Add trackers") + App.loc.emptyString
-                    Layout.fillWidth: true
-                }
-
-                DialogButton {
-                    text: qsTr("OK") + App.loc.emptyString
-                    Layout.leftMargin: qtbug.leftMargin(0, 10)
-                    Layout.rightMargin: qtbug.rightMargin(0, 10)
-                    textColor: appWindow.theme.toolbarTextColor
-                    enabled: trackers.text.trim() != ''
-                    onClicked: doOK()
-                }
-            }
-        }
-    }
-
-    TextArea {
+    BaseTextArea
+    {
         id: trackers
-        anchors {
-            left: parent.left
-            right: parent.right
-            margins: 20
-        }
+        Layout.fillWidth: true
         selectByMouse: true
         inputMethodHints: Qt.ImhNoAutoUppercase | Qt.ImhNoPredictiveText | Qt.ImhSensitiveData
         wrapMode: TextArea.Wrap
         focus: true
     }
+
+    DialogFlatButton_V2
+    {
+        visible: appWindow.uiver !== 1
+        text: qsTr("OK") + App.loc.emptyString
+        enabled: v1_okButtonEnabled
+        primary: true
+        onClicked: doOK()
+        Layout.fillWidth: true
+        Layout.minimumHeight: 40*appWindow.zoom
+    }
+
+    Item {Layout.fillHeight: true}
 
     Component.onCompleted: {
         trackers.text = uiSettingsTools.settings.btAddTString;
@@ -64,7 +53,8 @@ Page {
     }
 
     function cancel() {
-        uiSettingsTools.settings.btAddTString = trackers.text.trim();
+        if (!trackers.text.trim())
+            uiSettingsTools.settings.btAddTString = "";
         stackView.pop();
     }
 }

@@ -31,6 +31,8 @@ Column
 
         BaseButton
         {
+            enabled: !App.isLogDisabled()
+
             text: qsTr("Archive logs...") + App.loc.emptyString
 
             onClicked: logsFileDlg.open()
@@ -61,6 +63,7 @@ Column
     }
 
     RowLayout {
+        enabled: !App.isLogDisabled()
         anchors.left: parent.left
 
         BaseCheckBox
@@ -83,6 +86,7 @@ Column
     }
 
     RowLayout {
+        enabled: !App.isLogDisabled()
         anchors.left: parent.left
 
         BaseCheckBox
@@ -105,6 +109,7 @@ Column
     }
 
     RowLayout {
+        enabled: !App.isLogDisabled()
         anchors.left: parent.left
 
         BaseCheckBox

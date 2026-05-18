@@ -4,95 +4,62 @@ import QtQuick.Layouts
 import org.freedownloadmanager.fdm
 import QtQuick.Controls.Material
 import "BaseElements"
+import "BaseElements/V2"
 import "../common/Tools"
 
-Page {
+BasePage {
     property var downloadModel
 
-    header: Column {
-        height: 108
-        width: parent.width
+    title: qsTr("Change download URL") + App.loc.emptyString
 
-        BaseToolBar {
-            RowLayout {
-                anchors.fill: parent
+    v1_okButtonVisible: true
+    v1_okButtonEnabled: newUrl.displayText
+    onV1_okButtonClicked: doOK()
 
-                ToolbarBackButton {
-                    onClicked: stackView.pop()
-                }
-
-                ToolbarLabel {
-                    text: qsTr("Change download URL") + App.loc.emptyString
-                    Layout.fillWidth: true
-                }
-
-                DialogButton {
-                    text: qsTr("OK") + App.loc.emptyString
-                    Layout.rightMargin: qtbug.rightMargin(0, 10)
-                    Layout.leftMargin: qtbug.leftMargin(0, 10)
-                    textColor: appWindow.theme.toolbarTextColor
-                    enabled: newUrl.displayText.length > 0
-                    onClicked: doOK()
-                }
-            }
-        }
-
-        ToolBarShadow {}
-
-        ExtraToolBar {
-            Rectangle {
-                color: "transparent"
-                anchors.fill: parent
-                anchors.leftMargin: 20
-
-                BaseLabel {
-                    text: downloadModel.title + " " + App.bytesAsText(downloadModel.size) + App.loc.emptyString
-                    width: parent.width
-                    anchors.verticalCenter: parent.verticalCenter
-                    elide: Text.ElideMiddle
-                }
-            }
-        }
+    BasePageLabel
+    {
+        text: qsTr("Enter new URL") + App.loc.emptyString
     }
 
-    ColumnLayout {
-        anchors.left: parent.left
-        anchors.right: parent.right
-        spacing: 2
-        anchors.margins: 20
-
-        BaseLabel {
-            Layout.topMargin: 20
-            text: qsTr("Enter new URL") + App.loc.emptyString
-        }
-
-        BaseTextField {
-            id: newUrl
-            selectByMouse: true
-            inputMethodHints: Qt.ImhNoAutoUppercase | Qt.ImhNoPredictiveText | Qt.ImhSensitiveData
-            onAccepted: doOK()
-            focus: true
-            wrapMode: TextInput.WrapAnywhere
-            Layout.fillWidth: true
-            Layout.maximumHeight: appWindow.height/2
-        }
-
-        BaseLabel
-        {
-            visible: downloadModel.destinationPath
-            text: qsTr("File location: %1").arg(downloadModel.destinationPath)
-            width: parent.width
-            elide: Text.ElideMiddle
-        }
-
-        BaseCheckBox {
-            id: startDownload
-            text: qsTr("Start download") + App.loc.emptyString
-            enabled: !downloadModel.running && !downloadModel.finished
-            checked: true
-            opacity: enabled ? 1 : 0.5
-        }
+    BaseTextField
+    {
+        id: newUrl
+        selectByMouse: true
+        inputMethodHints: Qt.ImhNoAutoUppercase | Qt.ImhNoPredictiveText | Qt.ImhSensitiveData
+        onAccepted: doOK()
+        focus: true
+        wrapMode: TextInput.WrapAnywhere
+        Layout.fillWidth: true
+        Layout.maximumHeight: appWindow.height/2
     }
+
+    BaseLabel
+    {
+        visible: downloadModel.destinationPath
+        text: qsTr("File location: %1").arg(downloadModel.destinationPath)
+        Layout.fillWidth: true
+        elide: Text.ElideMiddle
+    }
+
+    BaseCheckBox {
+        id: startDownload
+        text: qsTr("Start download") + App.loc.emptyString
+        enabled: !downloadModel.running && !downloadModel.finished
+        checked: true
+    }
+
+    DialogFlatButton_V2
+    {
+        visible: appWindow.uiver !== 1
+        text: qsTr("OK") + App.loc.emptyString
+        enabled: v1_okButtonEnabled
+        primary: true
+        onClicked: doOK()
+        Layout.fillWidth: true
+        Layout.minimumHeight: 40*appWindow.zoom
+    }
+
+    Item {Layout.fillHeight: true}
 
     Component.onCompleted: {
         newUrl.text = downloadModel.resourceUrl;

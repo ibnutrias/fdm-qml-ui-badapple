@@ -9,7 +9,7 @@ import "../../../desktop/BottomPanel"
 
 Item
 {
-    DownloadsItemTools {
+    DownloadsItemTools2 {
         id: downloadsItemTools
         itemId: selectedDownloadsTools.currentDownloadId
         onFinishedChanged: bottomPanelTools.updateState()

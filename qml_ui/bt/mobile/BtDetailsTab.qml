@@ -2,6 +2,8 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import "../../mobile/BaseElements"
+import "../../mobile/BaseElements/V2"
+import "../../mobile/DownloadItemPage/V2"
 import org.freedownloadmanager.fdm
 
 ColumnLayout
@@ -20,54 +22,105 @@ ColumnLayout
     readonly property int btPeerCount: details ? details.btPeerCount : 0
     readonly property int btConnectedPeerCount: details ? details.btConnectedPeerCount : 0
 
+    readonly property string pair1Text: App.my_BT_qsTranslate("BtDetailsTab", "Peers:") + App.loc.emptyString
+    readonly property string pair1Value: btPeerCount + ' ' + qsTr("(connected: %1)").arg(btConnectedPeerCount) + App.loc.emptyString
+    readonly property string pair2Text: App.my_BT_qsTranslate("BtDetailsTab", "Seeds:") + App.loc.emptyString
+    readonly property string pair2Value: btSeedCount + ' ' + qsTr("(connected: %1)").arg(btConnectedSeedCount) + App.loc.emptyString
+    readonly property bool pair3Visible: !finished
+    readonly property string pair3Text: App.my_BT_qsTranslate("BtDetailsTab", "Availability:") + App.loc.emptyString
+    readonly property string pair3Value: btAvailability
+    readonly property bool pair4Visible: !finished
+    readonly property string pair4Text: App.my_BT_qsTranslate("BtDetailsTab", "Last seen complete:") + App.loc.emptyString
+    readonly property string pair4Value: btLastSeenComplete
+
     spacing: 10
 
     GridLayout
     {
+        visible: appWindow.uiver === 1
+
         columns: 2
 
         BaseLabel
         {
-            text: App.my_BT_qsTranslate("BtDetailsTab", "Peers:") + App.loc.emptyString
+            text: pair1Text
         }
         RowLayout
         {
             BaseLabel
             {
-                text: btPeerCount + ' ' + qsTr("(connected: %1)").arg(btConnectedPeerCount) + App.loc.emptyString
+                text: pair1Value
             }
             Item {implicitWidth: 30; implicitHeight: 1} // horizontal spacing
         }
 
         BaseLabel
         {
-            text: App.my_BT_qsTranslate("BtDetailsTab", "Seeds:") + App.loc.emptyString
+            text: pair2Text
         }
         BaseLabel
         {
-            text: btSeedCount + ' ' + qsTr("(connected: %1)").arg(btConnectedSeedCount) + App.loc.emptyString
-        }
-
-        BaseLabel
-        {
-            visible: !finished
-            text: App.my_BT_qsTranslate("BtDetailsTab", "Availability:") + App.loc.emptyString
-        }
-        BaseLabel
-        {
-            visible: !finished
-            text: btAvailability
+            text: pair2Value
         }
 
         BaseLabel
         {
-            visible: !finished
-            text: App.my_BT_qsTranslate("BtDetailsTab", "Last seen complete:") + App.loc.emptyString
+            visible: pair3Visible
+            text: pair3Text
         }
         BaseLabel
         {
-            visible: !finished
-            text: btLastSeenComplete
+            visible: pair3Visible
+            text: pair3Value
+        }
+
+        BaseLabel
+        {
+            visible: pair4Visible
+            text: pair4Text
+        }
+        BaseLabel
+        {
+            visible: pair4Visible
+            text: pair4Value
+        }
+    }
+
+    ColumnLayout
+    {
+        visible: appWindow.uiver !== 1
+
+        spacing: 8*appWindow.zoom
+        Layout.fillWidth: true
+
+        NameValueText_V2
+        {
+            name: pair1Text
+            value: pair1Value
+            Layout.fillWidth: true
+        }
+
+        NameValueText_V2
+        {
+            name: pair2Text
+            value: pair2Value
+            Layout.fillWidth: true
+        }
+
+        NameValueText_V2
+        {
+            visible: pair3Visible
+            name: pair3Text
+            value: pair3Value
+            Layout.fillWidth: true
+        }
+
+        NameValueText_V2
+        {
+            visible: pair4Visible
+            name: pair4Text
+            value: pair4Value
+            Layout.fillWidth: true
         }
     }
 
@@ -86,61 +139,127 @@ ColumnLayout
 
         model: ListModel {}
 
+        spacing: appWindow.uiver === 1 ? 0 : 8*appWindow.zoom
+
         property int trackerUrlItemWidth: 0
 
         Rectangle {
+            visible: appWindow.uiver === 1
             anchors.fill: parent
             color: "transparent"
             border.color: appWindow.theme.border
             border.width: 1
         }
 
-        header: RowLayout {
+        header: Item
+        {
             width: parent.width
-            spacing: 0
+            height: headerCt.implicitHeight
+
             z: 2
 
-            TablesHeaderItem {
-                id: trackerUrlItem
-                text: App.my_BT_qsTranslate("BtDetailsTab", "Tracker URL") + App.loc.emptyString
-                Layout.preferredWidth: trackers.width * 4/9
-                Layout.fillHeight: true
-                color: appWindow.theme.background
-                onWidthChanged: trackers.trackerUrlItemWidth = width
+            Rectangle
+            {
+                visible: appWindow.uiver !== 1
+                anchors.fill: parent
+                color: appWindow.theme_v2.bgColor
             }
 
-            TablesHeaderItem {
-                id: trackerStatusItem
-                text: qsTr("Status") + App.loc.emptyString
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                color: appWindow.theme.background
+            ColumnLayout
+            {
+                id: headerCt
+
+                anchors.fill: parent
+
+                spacing: 0
+
+                ListViewItemSeparator_V2
+                {
+                    visible: appWindow.uiver !== 1
+                    Layout.fillWidth: true
+                }
+
+                RowLayout
+                {
+                    Layout.fillWidth: true
+
+                    spacing: appWindow.uiver === 1 ? 0 : 16*appWindow.zoom
+
+                    BaseLabel
+                    {
+                        visible: appWindow.uiver !== 1
+                        text: App.my_BT_qsTranslate("BtDetailsTab", "Tracker URL") + App.loc.emptyString
+                        Layout.preferredWidth: trackers.width * 4/9
+                        color: appWindow.theme_v2.bg700
+                        onWidthChanged: trackers.trackerUrlItemWidth = width
+                    }
+
+                    BaseLabel
+                    {
+                        visible: appWindow.uiver !== 1
+                        text: qsTr("Status") + App.loc.emptyString
+                        Layout.fillWidth: true
+                        color: appWindow.theme_v2.bg700
+                    }
+
+                    TablesHeaderItem {
+                        visible: appWindow.uiver === 1
+                        text: App.my_BT_qsTranslate("BtDetailsTab", "Tracker URL") + App.loc.emptyString
+                        Layout.preferredWidth: trackers.width * 4/9
+                        Layout.fillHeight: true
+                        color: appWindow.theme.background
+                        onWidthChanged: trackers.trackerUrlItemWidth = width
+                    }
+
+                    TablesHeaderItem {
+                        visible: appWindow.uiver === 1
+                        text: qsTr("Status") + App.loc.emptyString
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        color: appWindow.theme.background
+                    }
+                }
+
+                ListViewItemSeparator_V2
+                {
+                    visible: appWindow.uiver !== 1
+                    Layout.fillWidth: true
+                }
+
+                Item
+                {
+                    visible: appWindow.uiver !== 1
+                    implicitHeight: 8
+                }
             }
         }
 
-        delegate: RowLayout {
+        delegate: RowLayout
+        {
             width: trackers.width
-            height: 35
-            spacing: 0
 
-            BaseLabel {
+            spacing: appWindow.uiver === 1 ? 0 : 16*appWindow.zoom
+
+            BaseLabel
+            {
                 text: model.url
                 Layout.preferredWidth: trackers.trackerUrlItemWidth
                 Layout.minimumWidth: Layout.preferredWidth
                 Layout.fillHeight: true
-                leftPadding: qtbug.leftPadding(6, 0)
-                rightPadding: qtbug.rightPadding(6, 0)
+                leftPadding: appWindow.uiver === 1 ? qtbug.leftPadding(6, 0) : 0
+                rightPadding: appWindow.uiver === 1 ? qtbug.rightPadding(6, 0) : 0
                 elide: Text.ElideRight
                 wrapMode: Text.WrapAnywhere
             }
 
-            BaseLabel {
+            BaseLabel
+            {
                 text: model.status
                 color: model.statusColor
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                leftPadding: qtbug.leftPadding(6, 0)
-                rightPadding: qtbug.rightPadding(6, 0)
+                leftPadding: appWindow.uiver === 1 ? qtbug.leftPadding(6, 0) : 0
+                rightPadding: appWindow.uiver === 1 ? qtbug.rightPadding(6, 0) : 0
                 elide: Text.ElideRight
                 wrapMode: Text.WordWrap
             }
@@ -167,23 +286,31 @@ ColumnLayout
             if (t.waitingResponse)
             {
                 status = qsTr("Updating...") + App.loc.emptyString;
-                statusColor = appWindow.theme.foreground;
+                statusColor = appWindow.uiver === 1 ?
+                            appWindow.theme.foreground :
+                            appWindow.theme_v2.textColor;
             }
             else if (t.error)
             {
                 status = App.tools.errorToString(t.error, false);
-                statusColor = appWindow.theme.errorMessage;
+                statusColor = appWindow.uiver === 1 ?
+                            appWindow.theme.errorMessage :
+                            appWindow.theme_v2.danger;
             }
             else if (t.warning)
             {
                 status = t.warning;
-                statusColor = appWindow.theme.warningMessage;
+                statusColor = appWindow.uiver === 1 ?
+                            appWindow.theme.warningMessage :
+                            appWindow.theme_v2.amber;
             }
             else
             {
                 if (t.isOk)
                     status = "OK";
-                statusColor = appWindow.theme.successMessage;
+                statusColor = appWindow.uiver === 1 ?
+                            appWindow.theme.successMessage :
+                            appWindow.theme_v2.secondary;
             }
 
             let o = {"url": t.url, "status": status, "statusColor": statusColor};
@@ -206,5 +333,6 @@ ColumnLayout
     Connections {
         target: appWindow
         onThemeChanged: updateTrackersModel()
+        onUiverChanged: updateTrackersModel()
     }
 }

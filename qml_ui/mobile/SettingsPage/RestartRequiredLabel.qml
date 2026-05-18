@@ -14,7 +14,6 @@ Row {
 
     BaseLabel {
         text: qsTr("<a href='#'>Restart is required</a>") + App.loc.emptyString
-        //font.pixelSize: 11*appWindow.fontZoom
         anchors.verticalCenter: parent.verticalCenter
         onLinkActivated: App.restart()
     }

@@ -4,6 +4,7 @@ import QtQuick.Controls.Material
 import QtQuick.Effects
 import org.freedownloadmanager.fdm
 import org.freedownloadmanager.fdm.appfeatures
+import "BaseElements"
 
 Drawer {
     id: root
@@ -15,15 +16,6 @@ Drawer {
 
     edge: appWindow.LayoutMirroring.enabled ? Qt.RightEdge : Qt.LeftEdge
 
-    // Qt 6.9.2+ does not require this
-    /*topPadding: App.systemWindowInsets ?
-                    App.systemWindowInsets.top / Screen.devicePixelRatio + 5 :
-                    16
-
-    bottomPadding: App.systemWindowInsets ?
-                       App.systemWindowInsets.bottom / Screen.devicePixelRatio + 5 :
-                       16*/
-
     ListView {
         id: listview
         focus: true
@@ -32,10 +24,14 @@ Drawer {
         height: parent.height - addNewDownloadBlock.height
         headerPositioning: ListView.OverlayHeader
 
+        MainMenuHelper {
+            id: helper
+        }
+
         Label {
             id: l
             visible: false
-            font.pixelSize: 16
+            font.pixelSize: 16*appWindow.fontZoom
         }
         FontMetrics {
             id: fm
@@ -45,8 +41,8 @@ Drawer {
         implicitWidth: {
             // icon + text
             let h = 64 + fm.advanceWidth(App.displayName);
-            for (let i = 0; i < listModel.count; ++i)
-                h = Math.max(h, 24 + fm.advanceWidth(listModel.get(i).text));
+            for (let i = 0; i < helper.model.count; ++i)
+                h = Math.max(h, 24 + fm.advanceWidth(helper.model.get(i).text));
             // left padding + spacing between icon and text + h + right padding
             return 20 + 10 + h + 20;
         }
@@ -76,7 +72,7 @@ Drawer {
                 Label {
                     text: App.displayName
                     color: appWindow.theme.toolbarTextColor
-                    font.pixelSize: 16
+                    font.pixelSize: 16*appWindow.fontZoom
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
 
@@ -84,7 +80,7 @@ Drawer {
                     visible: !appWindow.hasDownloadMgr
                     text: qsTr("remote control") + App.loc.emptyString
                     color: appWindow.theme.toolbarTextColor
-                    font.pixelSize: 16
+                    font.pixelSize: 16*appWindow.fontZoom
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
             }
@@ -102,7 +98,7 @@ Drawer {
                 if (model.enabled)
                 {
                     root.close()
-                    listModel.actions[model.actionLabel]();
+                    helper.model.actions[model.actionLabel]();
                 }
             }
 
@@ -126,7 +122,7 @@ Drawer {
                 }
                 Label {
                     text: model.text
-                    font.pixelSize: 15
+                    font.pixelSize: 15*appWindow.fontZoom
                     wrapMode: Text.WordWrap
                     horizontalAlignment: Text.AlignLeft
                     width: parent.width - 24 - parent.spacing
@@ -135,77 +131,7 @@ Drawer {
             }
         }
 
-        model: listModel
-    }
-
-    ListModel {
-        id: listModel
-
-        property var actions : {
-            "startAllDownloadsWithPostFinishedTasks": function(){ App.downloads.mgr.startAllDownloadsWithPostFinishedTasks();},
-            "stopAllDownloadsWithPostFinishedTasks": function(){ App.downloads.mgr.stopAllDownloadsWithPostFinishedTasks();},
-            "browser": function(){ root.browserBtnClicked()},
-            "settings": function(){ stackView.waPush(Qt.resolvedUrl("SettingsPage/SettingsPage.qml")) },
-            "support": function(){ Qt.openUrlExternally('https://www.freedownloadmanager.org/support.htm?origin=menu&' + App.serverCommonGetParameters); },
-            "bugReport": function() {bugReportDlg.open();},
-            "connectToRemoteApp": function() {connectToRemoteAppDlg.open();},
-            "disconnectFromRemoteApp": function() {App.rc.client.disconnectFromRemoteApp();},
-            "about": function(){ aboutDlg.open(); },
-            "quit": function(){ App.quit(); },
-            "selfTest": function(){ App.launchSelfTest(); }
-        }
-
-        function build() {
-            // WARNING: QTBUG-96397. Qt.resolvedUrl must be called the last when defining item's properties
-
-            clear();
-
-            if (appWindow.btSupported &&
-                    App.downloads.tracker.hasPostFinishedTasksDownloadsCount)
-            {
-                append({"text": appWindow.btS.startAllSeedingDownloadsUiText,
-                       "actionLabel": "startAllDownloadsWithPostFinishedTasks",
-                       "enabled": App.downloads.tracker.finishedHasDisabledPostFinishedTasks,
-                       "icon": Qt.resolvedUrl("../images/mobile/play.svg"),});
-                append({"text": appWindow.btS.stopAllSeedingDownloadsUiText,
-                        "actionLabel": "stopAllDownloadsWithPostFinishedTasks",
-                        "enabled": App.downloads.tracker.finishedHasEnabledPostFinishedTasks,
-                        "icon": Qt.resolvedUrl("../images/mobile/pause.svg"),});
-            }
-
-            if (App.features.hasFeature(AppFeatures.BuiltinWebBrowser))
-            {
-                append({
-                           "text": qsTr("Browser"),
-                           "actionLabel": "browser",
-                           "enabled": true,
-                           "icon": Qt.resolvedUrl("../images/mobile/browser.svg")
-                       });
-            }
-
-            if (!App.rc.client.active)
-                append({"text": qsTr("Settings"), "actionLabel": "settings", "enabled": true, "icon": Qt.resolvedUrl("../images/mobile/settings.svg")});
-
-            append({"text": qsTr("Contact support"), 'actionLabel': "support", "enabled": true, "icon": Qt.resolvedUrl("../images/mobile/support.svg")});
-
-            if (App.features.hasFeature(AppFeatures.SubmitBugReport))
-                append({"text": qsTr("Submit a bug report"), 'actionLabel': "bugReport", "enabled": true, "icon": Qt.resolvedUrl("../images/mobile/bug_report.svg")});
-
-            if (App.features.hasFeature(AppFeatures.RemoteControlClient))
-            {
-                if (App.rc.client.active)
-                    append({"text": qsTr("Disconnect from remote %1").arg(App.shortDisplayName), "actionLabel": "disconnectFromRemoteApp", "enabled": true, "icon": Qt.resolvedUrl("../images/mobile/rc.svg")});
-                else
-                    append({"text": qsTr("Connect to remote %1").arg(App.shortDisplayName), "actionLabel": "connectToRemoteApp", "enabled": true, "icon": Qt.resolvedUrl("../images/mobile/rc.svg")});
-            }
-
-            append({"text": qsTr("About"), "actionLabel": "about", "enabled": true, "icon": Qt.resolvedUrl("../images/mobile/about.svg")});
-
-            append({"text": qsTr("Quit"), "actionLabel": "quit", "enabled": true, "icon": Qt.resolvedUrl("../images/mobile/quit.svg")});
-
-            if (App.isSelfTestAvail)
-                append({"text": "Self Test", "actionLabel": "selfTest", "enabled": true, "icon": Qt.resolvedUrl("../images/mobile/self_test.svg")});
-        }
+        model: helper.model
     }
 
     Rectangle {
@@ -233,7 +159,7 @@ Drawer {
             anchors.horizontalCenter: parent.horizontalCenter
             text: qsTr("Add new download") + App.loc.emptyString
             color: appWindow.theme.toolbarTextColor
-            font.pixelSize: 14
+            font.pixelSize: 14*appWindow.fontZoom
             font.weight: Font.Medium
         }
 
@@ -244,39 +170,6 @@ Drawer {
                 appWindow.createDownloadDialog();
             }
         }
-    }
-
-    function browserBtnClicked() {
-        if (uiSettingsTools.settings.browserIntroShown) {
-            appWindow.openBrowser();
-        } else {
-            uiSettingsTools.settings.browserIntroShown = true;
-            browserIntroDlg.open();
-        }
-    }
-
-    Component.onCompleted: {
-        listModel.build();
-    }
-
-    Connections
-    {
-        target: App
-        onIsSelfTestAvailChanged: listModel.build()
-    }
-
-    Connections
-    {
-        target: App.downloads.tracker
-        onHasPostFinishedTasksDownloadsCountChanged: listModel.build()
-        onFinishedHasDisabledPostFinishedTasksChanged: listModel.build()
-        onFinishedHasEnabledPostFinishedTasksChanged: listModel.build()
-    }
-
-    Connections
-    {
-        target: App.loc
-        onCurrentTranslationChanged: listModel.build()
     }
 
     Connections {

@@ -5,26 +5,24 @@ import org.freedownloadmanager.fdm
 import org.freedownloadmanager.fdm.dmcoresettings
 import org.freedownloadmanager.fdm.appsettings
 import org.freedownloadmanager.fdm.tum
-import "."
-import "../BaseElements/"
+import "../BaseElements"
+import "../BaseElements/V2"
 
-Page {
+BaseSettingsPage {
     id: root
 
     property bool smallScreen: width < 500
 
-    header: PageHeaderWithBackArrow {
-        pageTitle: qsTr("Traffic limits") + App.loc.emptyString
-        //onPopPage: root.StackView.view.pop()
-        onPopPage:  {
-            invalidSettingsMessageDialog.lastInvalidSettingsMessage = root.invalidSettingsMessage();
-            if (invalidSettingsMessageDialog.lastInvalidSettingsMessage !== "")
-            {
-                invalidSettingsMessageDialog.open();
-                return;
-            }
-            root.StackView.view.pop()
+    title: qsTr("Traffic limits") + App.loc.emptyString
+
+    validateSettingsFn: () => {
+        invalidSettingsMessageDialog.lastInvalidSettingsMessage = root.invalidSettingsMessage();
+        if (invalidSettingsMessageDialog.lastInvalidSettingsMessage !== "")
+        {
+            invalidSettingsMessageDialog.open();
+            return false;
         }
+        return true;
     }
 
     InvalidSettingsMessageDialog {
@@ -33,271 +31,260 @@ Page {
         onPopPage: root.StackView.view.pop()
     }
 
-    Rectangle {
-        id: settingsWraper
-        color: "transparent"
+    Flickable
+    {
         anchors.fill: parent
+        flickableDirection: Flickable.VerticalFlick
+        ScrollIndicator.vertical: ScrollIndicator { }
+        boundsBehavior: Flickable.StopAtBounds
 
-        Flickable
-        {
-            anchors.fill: parent
-            flickableDirection: Flickable.VerticalFlick
-            ScrollIndicator.vertical: ScrollIndicator { }
-            boundsBehavior: Flickable.StopAtBounds
+        contentHeight: contentColumn.height + 20
 
-            //contentWidth: contentColumn.width
-            contentHeight: contentColumn.height + 20
+        clip: true
 
-            clip: true
+        ColumnLayout {
+            id: contentColumn
+            anchors.left: parent.left
+            anchors.right: parent.right
 
-            ColumnLayout {
-                id: contentColumn
-                anchors.left: parent.left
-                anchors.right: parent.right
+            spacing: 0
 
-                anchors.leftMargin: appWindow.showBordersInDownloadsList ? settingsWraper.width * 0.1 : 0
-                anchors.rightMargin: appWindow.showBordersInDownloadsList ? settingsWraper.width * 0.1 : 0
+            property var currentSection: null
 
-                spacing: 0
+            component SectionHeader: Item {
+                id: sh
 
-//-- contentColumn content - BEGIN -------------------------------------------------------------------
+                property string name
 
-    //--- Download speed - BEGIN ------------------------
+                readonly property bool isCurrent: contentColumn.currentSection === this
+                readonly property int spacing: 10*appWindow.zoom
+
+                implicitWidth: shL.implicitWidth + spacing + shI.implicitWidth
+                implicitHeight: shL.implicitHeight
+
+                Layout.fillWidth: true
+                Layout.maximumWidth: Math.min(parent.width, Math.ceil(implicitWidth))
+
                 SettingsGroupHeader {
-                    name: qsTr("Download speed") + App.loc.emptyString
-                    Layout.fillWidth: true
+                    id: shL
+                    name: sh.name
+                    width: parent.width - (spacing + shI.implicitWidth)
+                    anchors.left: parent.left
                 }
 
-                GridLayout {
-                    columns: smallScreen ? 1 : 3
-
-                    Layout.leftMargin: 20
-                    Layout.rightMargin: 20
-
-                    SpeedComboBoxWrapper {
-                        comboBoxText: qsTr("Low") + App.loc.emptyString
-                        speedLimitMode: TrafficUsageMode.Low
-                        speedLimitSetting: DmCoreSettings.MaxDownloadSpeed
-                    }
-
-                    SpeedComboBoxWrapper {
-                        comboBoxText: qsTr("Medium") + App.loc.emptyString
-                        speedLimitMode: TrafficUsageMode.Medium
-                        speedLimitSetting: DmCoreSettings.MaxDownloadSpeed
-                    }
-
-                    SpeedComboBoxWrapper {
-                        comboBoxText: qsTr("High") + App.loc.emptyString
-                        speedLimitMode: TrafficUsageMode.High
-                        speedLimitSetting: DmCoreSettings.MaxDownloadSpeed
-                    }
-                }
-    //--- Download speed - END ------------------------
-
-    //--- Upload speed - BEGIN ------------------------
-                SettingsGroupHeader {
-                    name: qsTr("Upload speed") + App.loc.emptyString
-                    Layout.fillWidth: true
+                SvgImage_V2 {
+                    id: shI
+                    source: Qt.resolvedUrl("../BaseElements/V2/expand_more.svg")
+                    imageColor: shL.color
+                    rotation: isCurrent ? 180 : 0
+                    anchors.left: parent.left
+                    anchors.leftMargin: shL.contentWidth + spacing
+                    anchors.verticalCenter: parent.verticalCenter
                 }
 
-                GridLayout {
-                    columns: smallScreen ? 1 : 3
-
-                    Layout.leftMargin: 20
-                    Layout.rightMargin: 20
-
-                    SpeedComboBoxWrapper {
-                        comboBoxText: qsTr("Low") + App.loc.emptyString
-                        speedLimitMode: TrafficUsageMode.Low
-                        speedLimitSetting: DmCoreSettings.MaxUploadSpeed
-                    }
-
-                    SpeedComboBoxWrapper {
-                        comboBoxText: qsTr("Medium") + App.loc.emptyString
-                        speedLimitMode: TrafficUsageMode.Medium
-                        speedLimitSetting: DmCoreSettings.MaxUploadSpeed
-                    }
-
-                    SpeedComboBoxWrapper {
-                        comboBoxText: qsTr("High") + App.loc.emptyString
-                        speedLimitMode: TrafficUsageMode.High
-                        speedLimitSetting: DmCoreSettings.MaxUploadSpeed
-                    }
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: contentColumn.currentSection = isCurrent ? null : parent
                 }
-    //--- Upload speed - END ------------------------
-
-    //--- Maximum number of connections - BEGIN ------------------------
-                SettingsGroupHeader
-                {
-                    name: qsTr("Maximum number of connections") + App.loc.emptyString
-                    Layout.fillWidth: true
-                }
-
-                GridLayout
-                {
-                   columns: smallScreen ? 1 : 3
-
-                   Layout.leftMargin: 20
-                   Layout.rightMargin: 20
-
-                   MaxConnectionsWrapper {
-                       id: maxConn1
-                       labelText: qsTr("Low") + App.loc.emptyString
-                       trafficUsageMode: TrafficUsageMode.Low
-                       maxDownloadSpeedSetting: DmCoreSettings.MaxConnections
-                   }
-
-                   MaxConnectionsWrapper {
-                       id: maxConn2
-                       labelText: qsTr("Medium") + App.loc.emptyString
-                       trafficUsageMode: TrafficUsageMode.Medium
-                       maxDownloadSpeedSetting: DmCoreSettings.MaxConnections
-                   }
-
-                   MaxConnectionsWrapper {
-                       id: maxConn3
-                       labelText: qsTr("High") + App.loc.emptyString
-                       trafficUsageMode: TrafficUsageMode.High
-                       maxDownloadSpeedSetting: DmCoreSettings.MaxConnections
-                   }
-                }
-    //--- Maximum number of connections - END ------------------------
-
-    /*
-    //--- Maximum number of connections per server - BEGIN ------------------------
-                SettingsGroupHeader
-                {
-                    id: h1
-                    name: qsTr("Maximum number of connections per server") + App.loc.emptyString
-                    Layout.fillWidth: true
-                }
-
-                GridLayout
-                {
-                   columns: smallScreen ? 1 : 3
-
-                   Layout.leftMargin: 20
-                   Layout.rightMargin: 20
-
-                   MaxConnectionsWrapper {
-                       id: maxConn4
-                       labelText: qsTr("Low") + App.loc.emptyString
-                       trafficUsageMode: TrafficUsageMode.Low
-                       maxDownloadSpeedSetting: DmCoreSettings.MaxConnectionsPerServer
-                   }
-
-                   MaxConnectionsWrapper {
-                       id: maxConn5
-                       labelText: qsTr("Medium") + App.loc.emptyString
-                       trafficUsageMode: TrafficUsageMode.Medium
-                       maxDownloadSpeedSetting: DmCoreSettings.MaxConnectionsPerServer
-                   }
-
-                   MaxConnectionsWrapper {
-                       id: maxConn6
-                       labelText: qsTr("High") + App.loc.emptyString
-                       trafficUsageMode: TrafficUsageMode.High
-                       maxDownloadSpeedSetting: DmCoreSettings.MaxConnectionsPerServer
-                   }
-                }
-    //--- Maximum number of connections per server - END ------------------------
-    */
-    //--- Maximum number of simultaneous downloads - BEGIN ------------------------
-                SettingsGroupHeader
-                {
-                    name: qsTr("Maximum number of simultaneous downloads") + App.loc.emptyString
-                    Layout.fillWidth: true
-                }
-
-                GridLayout
-                {
-                   columns: smallScreen ? 1 : 3
-
-                   Layout.leftMargin: 20
-                   Layout.rightMargin: 20
-
-                   MaxConnectionsWrapper {
-                       id: maxConn7
-                       labelText: qsTr("Low") + App.loc.emptyString
-                       trafficUsageMode: TrafficUsageMode.Low
-                       maxDownloadSpeedSetting: DmCoreSettings.MaxDownloads
-                   }
-
-                   MaxConnectionsWrapper {
-                       id: maxConn8
-                       labelText: qsTr("Medium") + App.loc.emptyString
-                       trafficUsageMode: TrafficUsageMode.Medium
-                       maxDownloadSpeedSetting: DmCoreSettings.MaxDownloads
-                   }
-
-                   MaxConnectionsWrapper {
-                       id: maxConn9
-                       labelText: qsTr("High") + App.loc.emptyString
-                       trafficUsageMode: TrafficUsageMode.High
-                       maxDownloadSpeedSetting: DmCoreSettings.MaxDownloads
-                   }
-                }
-    //--- Maximum number of simultaneous downloads - END ------------------------
-    //--- MaxURatio - BEGIN ------------------------
-                Loader {
-                    id : maxURatioGroup
-                    active: appWindow.btSupported
-                    source: "../../bt/mobile/MaxURatioLabel.qml"
-                    Layout.fillWidth: true
-                }
-
-                GridLayout {
-                    visible: maxURatioGroup.active
-                    columns: smallScreen ? 1 : 3
-                    Layout.leftMargin: 20
-                    Layout.rightMargin: 20
-
-                    MaxURatioComboBoxWrapper {
-                        comboBoxText: qsTr("Low") + App.loc.emptyString
-                        speedLimitMode: TrafficUsageMode.Low
-                        speedLimitSetting: maxURatioGroup.visible ? DmCoreSettings.MaxURatio : -1
-                    }
-
-                    MaxURatioComboBoxWrapper {
-                        comboBoxText: qsTr("Medium") + App.loc.emptyString
-                        speedLimitMode: TrafficUsageMode.Medium
-                        speedLimitSetting: maxURatioGroup.visible ? DmCoreSettings.MaxURatio : -1
-                    }
-
-                    MaxURatioComboBoxWrapper {
-                        comboBoxText: qsTr("High") + App.loc.emptyString
-                        speedLimitMode: TrafficUsageMode.High
-                        speedLimitSetting: maxURatioGroup.visible ? DmCoreSettings.MaxURatio : -1
-                    }
-                }
-    //--- MaxURatio - END ------------------------
-
-                Item {implicitHeight: 20; implicitWidth: 10}
-                SettingsSeparator{}
-
-                Item {
-                    Layout.fillWidth: true
-                    implicitWidth: childrenRect.width
-                    implicitHeight: childrenRect.height
-
-                    SwitchSetting {
-                        description: qsTr("Enable additional downloads to optimize speed") + App.loc.emptyString
-                        switchChecked: parseInt(App.settings.dmcore.value(DmCoreSettings.MaxAdditionalSmallDownloads)) > 0 ||
-                                       parseInt(App.settings.dmcore.value(DmCoreSettings.MaxAdditionalDownloadsIfTotalSpeedIsTooSlow)) > 0
-                        onClicked: {
-                            switchChecked = !switchChecked;
-                            App.settings.dmcore.setValue(
-                                        DmCoreSettings.MaxAdditionalSmallDownloads,
-                                        switchChecked ? "1" : "0");
-                            App.settings.dmcore.setValue(
-                                        DmCoreSettings.MaxAdditionalDownloadsIfTotalSpeedIsTooSlow,
-                                        switchChecked ? "1" : "0");
-                        }
-                    }
-                }
-
-//-- contentColumn content - END ---------------------------------------------------------------------
             }
+
+            component MyLayout: RowGridLayout {
+                Layout.fillWidth: true
+                Layout.maximumWidth: Math.min(parent.width - Layout.leftMargin - Layout.rightMargin, Math.ceil(implicitWidth1Row))
+
+                Layout.leftMargin: (appWindow.uiver === 1 ? 20 : appWindow.theme_v2.mainContentMargins)*appWindow.zoom
+                Layout.rightMargin: Layout.leftMargin
+            }
+
+            component Separator: SettingsSeparator {
+                required property bool sectionOpened
+                Layout.fillWidth: true
+                Layout.leftMargin: appWindow.uiver === 1 ? 0 : appWindow.theme_v2.mainContentMargins*appWindow.zoom
+                Layout.rightMargin: Layout.leftMargin
+                Layout.topMargin: (sectionOpened ? 14 : 0)*appWindow.zoom
+            }
+
+            SectionHeader {
+                id: downloadSpeedSection
+                name: qsTr("Download speed") + App.loc.emptyString
+                Layout.fillWidth: true
+            }
+
+            MyLayout {
+                visible: downloadSpeedSection.isCurrent
+                SpeedComboBoxWrapper {
+                    comboBoxText: qsTr("Low") + App.loc.emptyString
+                    speedLimitMode: TrafficUsageMode.Low
+                    speedLimitSetting: DmCoreSettings.MaxDownloadSpeed
+                }
+
+                SpeedComboBoxWrapper {
+                    comboBoxText: qsTr("Medium") + App.loc.emptyString
+                    speedLimitMode: TrafficUsageMode.Medium
+                    speedLimitSetting: DmCoreSettings.MaxDownloadSpeed
+                }
+
+                SpeedComboBoxWrapper {
+                    comboBoxText: qsTr("High") + App.loc.emptyString
+                    speedLimitMode: TrafficUsageMode.High
+                    speedLimitSetting: DmCoreSettings.MaxDownloadSpeed
+                }
+            }
+
+            Separator {sectionOpened: downloadSpeedSection.isCurrent}
+
+            SectionHeader {
+                id: uploadSpeedSection
+                name: qsTr("Upload speed") + App.loc.emptyString
+                Layout.fillWidth: true
+            }
+
+            MyLayout {
+                visible: uploadSpeedSection.isCurrent
+
+                SpeedComboBoxWrapper {
+                    comboBoxText: qsTr("Low") + App.loc.emptyString
+                    speedLimitMode: TrafficUsageMode.Low
+                    speedLimitSetting: DmCoreSettings.MaxUploadSpeed
+                }
+
+                SpeedComboBoxWrapper {
+                    comboBoxText: qsTr("Medium") + App.loc.emptyString
+                    speedLimitMode: TrafficUsageMode.Medium
+                    speedLimitSetting: DmCoreSettings.MaxUploadSpeed
+                }
+
+                SpeedComboBoxWrapper {
+                    comboBoxText: qsTr("High") + App.loc.emptyString
+                    speedLimitMode: TrafficUsageMode.High
+                    speedLimitSetting: DmCoreSettings.MaxUploadSpeed
+                }
+            }
+
+            Separator {sectionOpened: uploadSpeedSection.isCurrent}
+
+            SectionHeader
+            {
+                id: maxConnSection
+                name: qsTr("Maximum number of connections") + App.loc.emptyString
+                Layout.fillWidth: true
+            }
+
+            MyLayout
+            {
+                visible: maxConnSection.isCurrent
+
+                MaxConnectionsWrapper {
+                    id: maxConn1
+                    labelText: qsTr("Low") + App.loc.emptyString
+                    trafficUsageMode: TrafficUsageMode.Low
+                    maxDownloadSpeedSetting: DmCoreSettings.MaxConnections
+                }
+
+                MaxConnectionsWrapper {
+                    id: maxConn2
+                    labelText: qsTr("Medium") + App.loc.emptyString
+                    trafficUsageMode: TrafficUsageMode.Medium
+                    maxDownloadSpeedSetting: DmCoreSettings.MaxConnections
+                }
+
+                MaxConnectionsWrapper {
+                    id: maxConn3
+                    labelText: qsTr("High") + App.loc.emptyString
+                    trafficUsageMode: TrafficUsageMode.High
+                    maxDownloadSpeedSetting: DmCoreSettings.MaxConnections
+                }
+            }
+
+            Separator {sectionOpened: maxConnSection.isCurrent}
+
+            SectionHeader
+            {
+                id: maxDownloadsSection
+                name: qsTr("Maximum number of simultaneous downloads") + App.loc.emptyString
+                Layout.fillWidth: true
+            }
+
+            MyLayout {
+                visible: maxDownloadsSection.isCurrent
+
+                MaxConnectionsWrapper {
+                    id: maxConn7
+                    labelText: qsTr("Low") + App.loc.emptyString
+                    trafficUsageMode: TrafficUsageMode.Low
+                    maxDownloadSpeedSetting: DmCoreSettings.MaxDownloads
+                }
+
+                MaxConnectionsWrapper {
+                    id: maxConn8
+                    labelText: qsTr("Medium") + App.loc.emptyString
+                    trafficUsageMode: TrafficUsageMode.Medium
+                    maxDownloadSpeedSetting: DmCoreSettings.MaxDownloads
+                }
+
+                MaxConnectionsWrapper {
+                    id: maxConn9
+                    labelText: qsTr("High") + App.loc.emptyString
+                    trafficUsageMode: TrafficUsageMode.High
+                    maxDownloadSpeedSetting: DmCoreSettings.MaxDownloads
+                }
+            }
+
+            Separator {sectionOpened: maxDownloadsSection.isCurrent}
+
+            SectionHeader {
+                id: maxURatioSection
+                visible: name
+                name: btS ? btS.stopSAtRatio : ""
+                Layout.fillWidth: true
+            }
+
+            MyLayout {
+                visible: maxURatioSection.visible && maxURatioSection.isCurrent
+
+                MaxURatioComboBoxWrapper {
+                    comboBoxText: qsTr("Low") + App.loc.emptyString
+                    speedLimitMode: TrafficUsageMode.Low
+                    speedLimitSetting: maxURatioSection.visible ? DmCoreSettings.MaxURatio : -1
+                }
+
+                MaxURatioComboBoxWrapper {
+                    comboBoxText: qsTr("Medium") + App.loc.emptyString
+                    speedLimitMode: TrafficUsageMode.Medium
+                    speedLimitSetting: maxURatioSection.visible ? DmCoreSettings.MaxURatio : -1
+                }
+
+                MaxURatioComboBoxWrapper {
+                    comboBoxText: qsTr("High") + App.loc.emptyString
+                    speedLimitMode: TrafficUsageMode.High
+                    speedLimitSetting: maxURatioSection.visible ? DmCoreSettings.MaxURatio : -1
+                }
+            }
+
+            Separator {visible: maxURatioSection.visible; sectionOpened: maxURatioSection.isCurrent}
+
+            Item {
+                Layout.fillWidth: true
+                implicitWidth: childrenRect.width
+                implicitHeight: childrenRect.height
+
+                SwitchSetting {
+                    description: qsTr("Enable additional downloads to optimize speed") + App.loc.emptyString
+                    switchChecked: parseInt(App.settings.dmcore.value(DmCoreSettings.MaxAdditionalSmallDownloads)) > 0 ||
+                                   parseInt(App.settings.dmcore.value(DmCoreSettings.MaxAdditionalDownloadsIfTotalSpeedIsTooSlow)) > 0
+                    onClicked: {
+                        switchChecked = !switchChecked;
+                        App.settings.dmcore.setValue(
+                                    DmCoreSettings.MaxAdditionalSmallDownloads,
+                                    switchChecked ? "1" : "0");
+                        App.settings.dmcore.setValue(
+                                    DmCoreSettings.MaxAdditionalDownloadsIfTotalSpeedIsTooSlow,
+                                    switchChecked ? "1" : "0");
+                    }
+                }
+            }
+
+            //-- contentColumn content - END ---------------------------------------------------------------------
         }
     }
 
@@ -306,9 +293,6 @@ Page {
         if (!maxConn1.isValidTumSetting() ||
             !maxConn2.isValidTumSetting() ||
             !maxConn3.isValidTumSetting() ||
-//            !maxConn4.isValidTumSetting() ||
-//            !maxConn5.isValidTumSetting() ||
-//            !maxConn6.isValidTumSetting() ||
             !maxConn7.isValidTumSetting() ||
             !maxConn8.isValidTumSetting() ||
             !maxConn9.isValidTumSetting())

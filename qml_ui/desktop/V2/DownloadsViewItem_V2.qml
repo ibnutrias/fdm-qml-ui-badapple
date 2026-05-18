@@ -48,7 +48,7 @@ Item
         }
     }
 
-    DownloadsItemTools {
+    DownloadsItemTools2 {
         id: downloadsItemTools
         itemId: model.id
         property bool locked: downloadsItemTools.lockReason != ""
@@ -174,9 +174,7 @@ Item
         width: downloadsViewHeader.sizeColWidth
 
         BaseText_V2 {
-            text: (downloadsItemTools.selectedSize != -1 ? App.bytesAsText(downloadsItemTools.selectedSize) :
-                  downloadsItemTools.bytesDownloaded > 0 ? App.bytesAsText(downloadsItemTools.bytesDownloaded) + " +" :
-                  qsTr("n/a")) + App.loc.emptyString
+            text: downloadsItemTools.sizeText
         }
     }
 
@@ -293,8 +291,10 @@ Item
         visible: !downloadsItemTools.finished &&
                  (dlCol.maContainsMouse || uplCol.maContainsMouse || containsMouse)
 
-        x: downloadsViewHeader.dlColX
-        width: downloadsViewHeader.uplColX - downloadsViewHeader.dlColX + downloadsViewHeader.uplColWidth
+        x: LayoutMirroring.enabled ?
+               downloadsViewHeader.uplColX :
+               downloadsViewHeader.dlColX
+        width: downloadsViewHeader.dlColWidth + downloadsViewHeader.uplColWidth + downloadsViewHeader.colSpacing
 
         spacing: 8*appWindow.zoom
 
@@ -333,7 +333,7 @@ Item
         BaseText_V2 {
             id: stoppedText
             visible: !downloadsItemTools.running && !downloadsItemTools.finished
-            text: qsTr("Stopped")
+            text: qsTr("Stopped") + App.loc.emptyString
             color: appWindow.theme_v2.bg500
         }
 
@@ -352,9 +352,7 @@ Item
             visible: !stoppedText.visible
             text: downloadsItemTools.eta >= 0 ?
                       JsTools.timeUtils.remainingTime(downloadsItemTools.eta) :
-                      (model.added ?
-                           (App.loc.dateTimeToString_v2(model.added, false, false) + App.loc.emptyString + (uicore.minuteUpdate ? "" : "")) :
-                           "")
+                      downloadsItemTools.dateAddedText
             color: (downloadsItemTools.eta >= 0 && uicore.snailTools.isSnail) ?
                        appWindow.theme_v2.amber :
                        appWindow.theme_v2.textColor

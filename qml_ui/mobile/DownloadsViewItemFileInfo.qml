@@ -118,7 +118,7 @@ Rectangle {
         anchors.leftMargin: 5
         horizontalAlignment: Text.AlignLeft
         elide: Text.ElideRight
-        font.pixelSize: 16
+        font.pixelSize: 16*appWindow.fontZoom
         font.weight: Font.Medium
         opacity: downloadsItemTools.itemOpacity
     }
@@ -166,7 +166,7 @@ Rectangle {
                     anchors.verticalCenter: parent.verticalCenter
                     horizontalAlignment: Text.AlignRight
                     text: App.speedAsText(downloadsItemTools.downloadSpeed) + App.loc.emptyString
-                    font.pixelSize: 12
+                    font.pixelSize: 12*appWindow.fontZoom
                     font.weight: Font.Light
                 }
             }
@@ -207,7 +207,7 @@ Rectangle {
                     anchors.verticalCenter: parent.verticalCenter
                     horizontalAlignment: Text.AlignRight
                     text: App.speedAsText(downloadsItemTools.uploadSpeed) + App.loc.emptyString
-                    font.pixelSize: 12
+                    font.pixelSize: 12*appWindow.fontZoom
                     font.weight: Font.Light
                 }
             }
@@ -239,7 +239,7 @@ Rectangle {
             {
                 text: qsTr("Download complete") + App.loc.emptyString
                 horizontalAlignment: Text.AlignLeft
-                font.pixelSize: 12
+                font.pixelSize: 12*appWindow.fontZoom
                 font.weight: Font.Light
                 elide: Text.ElideRight
                 clip: true
@@ -250,7 +250,8 @@ Rectangle {
         BaseErrorLabel
         {
             id: error_message
-            visible: downloadsItemTools.inError
+            visible: downloadsItemTools.inError &&
+                     !downloadsItemTools.running
             anchors.left: parent.left
             anchors.bottom: parent.bottom
             anchors.bottomMargin: 20
@@ -269,7 +270,7 @@ Rectangle {
             anchors.left: parent.left
             anchors.bottom: parent.bottom
             anchors.bottomMargin: 5
-            font.pixelSize: 12
+            font.pixelSize: 12*appWindow.fontZoom
             font.weight: Font.Light
         }
 
@@ -280,7 +281,7 @@ Rectangle {
             anchors.right: progressbar_rect.right
             anchors.bottom: parent.bottom
             anchors.bottomMargin: 27
-            font.pixelSize: 12
+            font.pixelSize: 12*appWindow.fontZoom
             font.weight: Font.Light
             property string estimatedtime: JsTools.timeUtils.remainingTime(downloadsItemTools.estimatedTimeSec)
 

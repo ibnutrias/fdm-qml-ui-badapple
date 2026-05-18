@@ -132,7 +132,7 @@ BaseDialog {
 
     Connections {
         target: App.filesOps
-        onGotErrorRemovingFile: {
+        onGotErrorRemovingFile: (taskId, path) => {
             if (ignoreAllMode) {
                 ignoreAll(taskId);
             } else {

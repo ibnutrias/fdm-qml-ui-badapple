@@ -7,21 +7,17 @@ import org.freedownloadmanager.fdm
 import "../../common"
 import "../BaseElements"
 
-Dialog
+CenteredDialog
 {
     id: root
 
     parent: Overlay.overlay
 
-    x: Math.round((appWindow.contentItem.width - width) / 2)
-    y: Math.round((appWindow.contentItem.height - height) / 2)
-
-    topMargin: appWindow.SafeArea.margins.top
-    leftMargin: appWindow.SafeArea.margins.left
-    bottomMargin: appWindow.SafeArea.margins.bottom
-    rightMargin: appWindow.SafeArea.margins.right
-
     modal: true
+
+    x: appWindow.uiver === 1 ?
+           Math.round((parent.width - width) / 2) :
+           parent.width - width
 
     contentItem: ColumnLayout {
         spacing: 0
@@ -30,12 +26,14 @@ Dialog
             adaptive: true
             labelSize: adaptiveTools.labelSize.highSize
             text: qsTr("Language") + App.loc.emptyString
-            Layout.alignment: Qt.AlignHCenter
+            Layout.alignment: appWindow.uiver === 1 ? Qt.AlignHCenter : Qt.AlignLeft
             Layout.bottomMargin: root.topPadding
-            font.pixelSize: 19
-            font.weight: Font.Medium
+            font: uicore.buildFont({weight: Font.Medium},
+                                   (appWindow.uiver === 1 ? 19 : (appWindow.theme_v2.fontSize+3))*appWindow.fontZoom)
         }
+
         Rectangle {
+            visible: appWindow.uiver === 1
             Layout.fillWidth: true
             Layout.preferredHeight: 1
             color: appWindow.theme.generalSettingsBorder
@@ -44,81 +42,82 @@ Dialog
         ListView {
             id: langList
 
+            readonly property int delegateHeight: (appWindow.uiver === 1 ? 30 : 40)*appWindow.zoom
+
             Layout.fillHeight: true
             Layout.fillWidth: true
-
-            property double bckgRatio: 30 / 10
 
             flickableDirection: Flickable.VerticalFlick
             boundsBehavior: Flickable.StopAtBounds
 
             model: App.loc.installedTranslations
 
-            implicitHeight: 30 * count
+            implicitHeight: delegateHeight * count
             implicitWidth: 300
 
             clip: true
 
-            delegate: Rectangle {
+            delegate: Item
+            {
                 id: listItem
-                height: 30
+
+                readonly property bool isCurrentLang: App.loc.currentTranslation === modelData
+
+                implicitWidth: listItemCt.implicitWidth
+                implicitHeight: listItemCt.implicitHeight
+
+                height: langList.delegateHeight
                 width: langList.width
-                color: "transparent"
-                clip: true
-                readonly property bool isCurrentLang: App.loc.currentTranslation == modelData
 
-                Rectangle {
-                    clip: true
-                    color: "transparent"
-                    width: 18 * langList.bckgRatio
-                    height: parent.height
-                    anchors.verticalCenter: parent.verticalCenter
-                    anchors.left: parent.left
-                    anchors.leftMargin: 35
-                    visible: listItem.isCurrentLang
+                ColumnLayout
+                {
+                    id: listItemCt
 
-                    WaSvgImage {
-                        zoom: langList.bckgRatio
-                        source: Qt.resolvedUrl("../../images/flags/" + modelData + ".svg")
-                        opacity: 0.3
-                        layer{
-                            effect: MultiEffect {
-                                blurEnabled: true
-                                blur: 1.0
-                                blurMax: 16
+                    anchors.fill: parent
+                    spacing: 0
+
+                    RowLayout
+                    {
+                        Layout.fillHeight: true
+
+                        spacing: 8*appWindow.zoom
+
+                        Item {
+                            visible: appWindow.uiver === 1
+                            Layout.preferredWidth: 40*appWindow.zoom
+                        }
+
+                        Item
+                        {
+                            implicitWidth: flagImg.preferredWidth
+                            implicitHeight: flagImg.preferredHeight
+                            WaSvgImage {
+                                id: flagImg
+                                visible: appWindow.uiver === 1
+                                source: Qt.resolvedUrl("../../images/flags/" + modelData + ".svg")
+                                zoom: (appWindow.uiver === 1 ? 1 : 2)*appWindow.zoom
                             }
-                            enabled: true
+                            RoundedImageEffect {
+                                enabled: appWindow.uiver !== 1
+                                source: flagImg
+                                radius: 2*appWindow.zoom
+                            }
+                        }
+
+                        BaseLabel
+                        {
+                            text: App.loc.translationLanguageString(modelData) +
+                                  " (" + App.loc.translationCountryString(modelData) + ")"
+                            color: appWindow.uiver === 1 ?
+                                       appWindow.theme.foreground :
+                                       appWindow.theme_v2.textColor2
+                            font: uicore.buildFont({capitalization: Font.Capitalize, weight: listItem.isCurrentLang ? Font.Bold : Font.Normal},
+                                                   (appWindow.uiver === 1 ? 14 : appWindow.theme_v2.fontSize)*appWindow.fontZoom)
+                            Layout.fillWidth: true
                         }
                     }
-                }
 
-                Rectangle {
-                    id: icon
-                    clip: true
-                    color: "transparent"
-                    width: 18
-                    height: 10
-                    anchors.verticalCenter: parent.verticalCenter
-                    anchors.left: parent.left
-                    anchors.leftMargin: 70
-
-                    WaSvgImage {
-                        source: Qt.resolvedUrl("../../images/flags/" + modelData + ".svg")
-                    }
-                }
-
-                BaseLabel {
-                    leftPadding: qtbug.leftPadding(15 + 18 + 70, 0)
-                    rightPadding: qtbug.rightPadding(15 + 18 + 70, 0)
-                    anchors.left: parent.left
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: App.loc.translationLanguageString(modelData) + " (" + App.loc.translationCountryString(modelData) + ")"
-                    font.capitalization: Font.Capitalize
-                    font.pixelSize: 14
-                }
-
-                SettingsSeparator{
-                    anchors.bottom: parent.bottom
+                    SettingsSeparator{}
                 }
 
                 MouseArea {

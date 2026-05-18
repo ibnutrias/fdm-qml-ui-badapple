@@ -4,14 +4,12 @@ import org.freedownloadmanager.fdm
 import "../BaseElements"
 
 
-Menu
+BaseMenu
 {
     id: root
 
     modal: true
     dim: false
-
-    width: 300
 
     signal macroSelected(string macro)
 

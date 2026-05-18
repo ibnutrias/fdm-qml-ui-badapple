@@ -1,13 +1,13 @@
 import QtQuick
 import QtQuick.Controls
 
-Label {
+BaseLabel {
     clip: true
-    elide: Label.ElideMiddle
+    elide: lineCount === 1 ? Label.ElideMiddle : Label.ElideRight
+    wrapMode: Text.WordWrap
+    maximumLineCount: 3
     horizontalAlignment: Qt.AlignHCenter
     verticalAlignment: Qt.AlignVCenter
-    font.pixelSize: 20
-    font.family: "Roboto"
-    font.weight: Font.DemiBold
+    font: uicore.buildFont({weight: Font.DemiBold}, 20*appWindow.fontZoom)
     color: appWindow.theme.toolbarTextColor
 }

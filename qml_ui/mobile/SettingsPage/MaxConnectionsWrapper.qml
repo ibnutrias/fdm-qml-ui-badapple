@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import "../BaseElements"
 
 Column {
     id: root
@@ -8,10 +9,10 @@ Column {
     property int maxDownloadSpeedSetting
     property string labelText
 
-    Label
+    BasePageLabel
     {
          text: root.labelText
-         font.pixelSize: 16
+         font: uicore.buildFont({}, (appWindow.uiver === 1 ? 16 : appWindow.theme_v2.fontSize)*appWindow.fontZoom)
          padding: 3
          anchors.left: parent.left
          horizontalAlignment: Text.AlignLeft

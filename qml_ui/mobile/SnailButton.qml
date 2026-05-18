@@ -12,7 +12,7 @@ RoundButton
     radius: Math.round(width/2)
 
     Material.elevation: 0
-    Material.background: snailTools.isSnail ? appWindow.theme.snailButtonActiveColor : appWindow.theme.snailButtonInactiveColor
+    Material.background: uicore.snailTools.isSnail ? appWindow.theme.snailButtonActiveColor : appWindow.theme.snailButtonInactiveColor
     display: AbstractButton.IconOnly
 
     icon.source: "../images/mobile/snail.png"
@@ -20,5 +20,5 @@ RoundButton
     icon.height: 20
     icon.color: "#fff"
 
-    onClicked: snailTools.toggleSnailMode()
+    onClicked: uicore.snailTools.toggleSnailMode()
 }

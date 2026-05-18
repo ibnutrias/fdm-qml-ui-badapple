@@ -13,28 +13,20 @@ CenteredDialog
     property double downloadId: -1
     property var info: downloadId !== -1 ? App.downloads.infos.info(downloadId) : null
 
+    parent: Overlay.overlay
+
     modal: true
 
-    contentItem: ColumnLayout {
-        width: parent.width
-        spacing: 10
-        anchors.leftMargin: 20
-        anchors.rightMargin: 20
+    title: qsTr("Download Failure") + App.loc.emptyString
 
-        RowLayout
+    RowLayout
+    {
+        WaSvgImage
         {
-            WaSvgImage
-            {
-                source: appWindow.theme.attentionImg
-                width: 16
-                height: 16
-            }
-
-            BaseLabel
-            {
-                font.bold: true
-                text: qsTr("Download Failure") + App.loc.emptyString
-            }
+            source: appWindow.theme.attentionImg
+            width: 16
+            height: 16
+            Layout.alignment: Qt.AlignTop
         }
 
         BaseLabel
@@ -46,6 +38,7 @@ CenteredDialog
                   App.loc.emptyString
             Layout.fillWidth: true
             Layout.fillHeight: true
+            Layout.maximumWidth: Math.min(ctMaxWidth, 500*appWindow.zoom)
             wrapMode: Label.WordWrap
             textFormat: Text.StyledText
             onLinkActivated: {
@@ -53,27 +46,25 @@ CenteredDialog
                 App.openDownloadUrl(link);
             }
         }
+    }
 
-        RowLayout {
-            Layout.topMargin: 10
-            Layout.bottomMargin: 10
-            Layout.alignment: Qt.AlignRight
-
-            spacing: 5
-
-            DialogButton {
-                visible: info && (info.flags & AbstractDownloadsUi.AllowChangeSourceUrl)
-                text: qsTr("Update download") + App.loc.emptyString
-                onClicked: {
-                    root.close();
-                    stackView.waPush(Qt.resolvedUrl("../ChangeUrlPage.qml"), {downloadModel:root.info})
-                }
+    BaseDialogButtonsLayout
+    {
+        BaseDialogButton
+        {
+            visible: info && (info.flags & AbstractDownloadsUi.AllowChangeSourceUrl)
+            text: qsTr("Update download") + App.loc.emptyString
+            primary: true
+            onClicked: {
+                root.close();
+                stackView.waPush(Qt.resolvedUrl("../ChangeUrlPage.qml"), {downloadModel:root.info})
             }
+        }
 
-            DialogButton {
-                text: qsTr("Close") + App.loc.emptyString
-                onClicked: root.close()
-            }
+        BaseDialogButton
+        {
+            text: qsTr("Close") + App.loc.emptyString
+            onClicked: root.close()
         }
     }
 }

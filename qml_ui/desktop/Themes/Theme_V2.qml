@@ -105,6 +105,13 @@ QtObject
     readonly property color highlightedDownloadGradientStart: isLightTheme ? lightHighlightedDownloadGradientStart : darkHighlightedDownloadGradientStart
     readonly property color highlightedDownloadGradientEnd: isLightTheme ? lightHighlightedDownloadGradientEnd : lightHighlightedDownloadGradientEnd
 
+    readonly property var donateBannerGradient: Gradient {
+        orientation: Gradient.Horizontal
+        GradientStop { position: 0.0; color: isLightTheme ? "#ECEFF3" : "#275972" }
+        GradientStop { position: isLightTheme ? 0.84 : 1.0; color: isLightTheme ? "#B1D2FF" : "#4BA9D8" }
+        GradientStop { position: isLightTheme ? 1.7 : 1.0; color: isLightTheme ? "#2E73D9" : "#4BA9D8" }
+    }
+
     function opacityColor(clr, opacity)
     {
         return Qt.rgba(clr.r, clr.g, clr.b, opacity);

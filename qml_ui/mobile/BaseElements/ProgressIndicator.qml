@@ -23,7 +23,7 @@ Rectangle {
         anchors.leftMargin: small ? undefined : 10
         anchors.verticalCenter: parent.verticalCenter
         text: root.progress + '%'
-        font.pixelSize: 11//small ? 11 : 12
+        font.pixelSize: 11*appWindow.fontZoom
         font.weight: Font.Light
     }
 

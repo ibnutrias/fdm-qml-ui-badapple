@@ -183,6 +183,7 @@ Column {
 
         RowLayout {
             spacing: 10*appWindow.zoom
+            anchors.left: parent.left
             width: parent.width - 20*appWindow.zoom
 
             DownloadFolderComboBox {

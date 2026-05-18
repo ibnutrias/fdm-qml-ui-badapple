@@ -67,8 +67,10 @@ Item
 
         readonly property int myOffset: model.level * 10 * appWindow.zoom
 
-        x: header.numColX + myOffset
-        width: header.nameColX - header.numColX + header.nameColWidth - myOffset
+        x: LayoutMirroring.enabled ?
+               header.nameColX :
+               header.numColX + myOffset
+        width: header.numColWidth + header.nameColWidth + header.numberColNameColSpacing - myOffset
 
         spacing: 8*appWindow.zoom
 

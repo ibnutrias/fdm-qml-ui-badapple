@@ -8,20 +8,34 @@ import QtQuick.Controls.Material
 import org.freedownloadmanager.fdm
 import ".."
 import "../BaseElements"
+import "../BaseElements/V2"
 import "../Dialogs"
+import "../V2"
+import "V2"
 
-Page {
-    id:picker
+BasePage
+{
+    id: picker
+
     signal fileSelected(string fileName)
+
     property bool showDirsFirst: true
     property string folder
-    property string rootFolder
     property string nameFilters: !onlyFolders && initiator === 'addDownload' && App.cfg.cdOpenFileDlgNameFilters ? App.cfg.cdOpenFileDlgNameFilters : "*.*"
     property int downloadId: -1
     property string initiator
     property bool onlyFolders: true
-    property int currentStorageIndex
-    property string currentStorageName
+    property int currentStorageIndex: -1
+
+    readonly property string currentStorageName:
+        currentStorageIndex != -1 ?
+            App.storages.storageInfo(currentStorageIndex).label :
+            ""
+
+    readonly property string currentStorageRootFolder:
+        currentStorageIndex != -1 ?
+            absolutePath(App.storages.storageInfo(currentStorageIndex).unrestrictedPath) :
+            ""
 
     Component.onCompleted: {
         defineStorageList();
@@ -29,101 +43,52 @@ Page {
     }
     onFolderChanged: updateFoldersBar()
 
-    header: Column {
-        id: toolbar
-        height: 108
-        width: root.width
+    title: (onlyFolders ? qsTr("Select folder") : qsTr("Select file")) + App.loc.emptyString
 
-        BaseToolBar {
-            RowLayout {
-                anchors.fill: parent
+    contentItemSpacing: 0
 
-                ToolbarBackButton {
-                    onClicked: stackView.pop()
-                }
+    ListModel {id: storageListModel}
 
-                ToolbarLabel {
-                    text: (onlyFolders ? qsTr("Select folder") : qsTr("Select file")) + App.loc.emptyString
-                    Layout.fillWidth: true
-                    Layout.rightMargin: qtbug.rightMargin(0, onlyFolders ? 0 : 60)
-                    Layout.leftMargin: qtbug.leftMargin(0, onlyFolders ? 0 : 60)
-                }
+    header_v1: Component
+    {
+        Column
+        {
+            height: 108
 
-                DialogButton {
-                    text: qsTr("OK") + App.loc.emptyString
-                    visible: onlyFolders
-                    Layout.rightMargin: qtbug.rightMargin(0, 10)
-                    Layout.leftMargin: qtbug.leftMargin(0, 10)
-                    textColor: appWindow.theme.toolbarTextColor
-                    onClicked: doOK()
-                }
-            }
-        }
-
-        ToolBarShadow {}
-
-        ExtraToolBar {
-            id: storageBar
-
-            ListView {
-                id: storageList
-                anchors.left: parent.left
-                anchors.right: sortMenuBtn.left
-                height: parent.height
-                model: ListModel{}
-                orientation: ListView.Horizontal
-                clip: true
-
-                delegate: RadioDelegate {
-                    id: control
-                    text: model.label
-                    checked: index == currentStorageIndex
-                    spacing: 5
-                    onPressed: {
-                        currentStorageIndex = index;
-                        resetFolder(absolutePath(model.unrestrictedPath));
-                        storageList.positionViewAtIndex(index, ListView.Center);
-                    }
-
-                    contentItem: Label {
-                        leftPadding: qtbug.leftPadding(control.indicator.width + control.spacing, 0)
-                        rightPadding: qtbug.rightPadding(control.indicator.width + control.spacing, 0)
-                        text: control.text
-                        elide: Text.ElideRight
-                        verticalAlignment: Text.AlignVCenter
-                    }
-
-                    indicator: Rectangle {
-                        implicitWidth: 18
-                        implicitHeight: 18
-                        x: LayoutMirroring.enabled ? control.width - width - qtbug.getLeftPadding(control) : qtbug.getLeftPadding(control)
-                        y: parent.height / 2 - height / 2
-                        radius: 9
-                        color: control.checked ? "#FFFFFF" : "transparent"
-                        border.color: "#FFFFFF"
-                        border.width: 2
-
-                        Rectangle {
-                            width: 8
-                            height: 8
-                            x: 5
-                            y: 5
-                            radius: 4
-                            color: appWindow.theme.toolbarBackground
-                            visible: control.checked
-                        }
-                    }
-                }
+            PageHeaderWithBackArrow
+            {
+                pageTitle: title
+                okButtonVisible: onlyFolders
+                onOkButtonClicked: doOK()
+                onPopPage: stackView.pop()
             }
 
-            ToolbarButton {
-                id: sortMenuBtn
-                anchors.right: parent.right
-                anchors.rightMargin: -6
-                anchors.verticalCenter: parent.verticalCenter
-                icon.source: Qt.resolvedUrl("../../images/mobile/sort_menu.svg")
-                onClicked: filePickerSortDialog.open()
-                width: visible ? width : 16
+            ToolBarShadow {}
+
+            ExtraToolBar
+            {
+                StorageListView
+                {
+                    anchors.left: parent.left
+                    anchors.leftMargin: picker.padding
+                    anchors.right: sortMenuBtn.left
+                    anchors.verticalCenter: parent.verticalCenter
+                    height: parent.height
+                    model: storageListModel
+                    currentIndex: currentStorageIndex
+                    onCurrentIndexChanged: resetFolder(absolutePath(model.get(currentStorageIndex=currentIndex).unrestrictedPath));
+                }
+
+                ToolbarButton
+                {
+                    id: sortMenuBtn
+                    anchors.right: parent.right
+                    anchors.rightMargin: -6
+                    anchors.verticalCenter: parent.verticalCenter
+                    icon.source: Qt.resolvedUrl("../../images/mobile/sort_menu.svg")
+                    onClicked: filePickerSortDialog.open()
+                    width: visible ? width : 16
+                }
             }
         }
     }
@@ -136,7 +101,7 @@ Page {
         showFiles: !onlyFolders
         sortField: uiSettingsTools.settings.filePickerSortField
         sortReversed: uiSettingsTools.settings.filePickerSortReversed
-        rootFolder: picker.rootFolder
+        rootFolder: picker.currentStorageRootFolder
         showOnlyReadable: true
         onStatusChanged: {
             if (folderListModel.status == FolderListModel.Ready && folderListModel.folder.toString() !== picker.folder.toString()) {
@@ -145,61 +110,95 @@ Page {
         }
     }
 
-    Rectangle {
-        color: "transparent"
-        width: parent.width
-        height: 44
-        id: foldersBar
-        property var folders: []
+    Loader
+    {
+        visible: active
+        active: appWindow.uiver !== 1 && storageListModel.count
+        sourceComponent: Component
+        {
+            StorageListView
+            {
+                model: storageListModel
+                currentIndex: currentStorageIndex
+                onCurrentIndexChanged: resetFolder(absolutePath(model.get(currentStorageIndex=currentIndex).unrestrictedPath));
+            }
+        }
+        Layout.fillWidth: true
+        Layout.preferredHeight: item ? item.implicitHeight + supposedContentItemSpacing : 0
+    }
 
-        Flickable {
-            width: Math.min(parent.width, foldersBarRow.width)
-            height: parent.height
-            anchors.left: parent.left
-            anchors.leftMargin: 15
-            anchors.rightMargin: 10
+    ListViewItemSeparator_V2
+    {
+        visible: appWindow.uiver !== 1
+        Layout.fillWidth: true
+    }
+
+    RowLayout
+    {
+        Flickable
+        {
+            id: foldersBar
+
+            property var folders: []
+
+            Layout.fillWidth: true
+
+            implicitHeight: foldersBarRow.implicitHeight
+            implicitWidth: foldersBarRow.implicitWidth
+
             contentWidth: foldersBarRow.width
-            clip: true
             onContentWidthChanged: contentX = Math.max(0, contentWidth - width)
 
-            Row {
-                id: foldersBarRow
-                height: parent.height
-                Repeater {
-                    model: foldersBar.folders.length
-                    Rectangle {
-                        color: "transparent"
-                        width: Math.round(folderText.width + toolbarArrow.width) + 6
-                        height: parent.height
+            clip: true
 
-                        Image {
-                            id: toolbarArrow
+            Row
+            {
+                id: foldersBarRow
+
+                spacing: 8*appWindow.zoom
+
+                Repeater
+                {
+                    model: foldersBar.folders.length
+
+                    Item
+                    {
+                        implicitWidth: children[0].implicitWidth
+                        implicitHeight: children[0].implicitHeight
+
+                        RowLayout
+                        {
                             anchors.verticalCenter: parent.verticalCenter
-                            anchors.left: parent.left
-                            anchors.leftMargin: 3
-                            source: Qt.resolvedUrl("../../images/mobile/arrow_right.svg")
-                            sourceSize.width: 7
-                            sourceSize.height: 8
-                            mirror: LayoutMirroring.enabled
-                            layer {
-                                effect: MultiEffect {
-                                    colorization: 1.0
-                                    colorizationColor: appWindow.theme.foreground
-                                }
-                                enabled: true
+                            spacing: foldersBarRow.spacing
+
+                            SvgImage_V2
+                            {
+                                id: toolbarArrow
+                                source: Qt.resolvedUrl("../../images/mobile/arrow_right.svg")
+                                sourceSize: Qt.size(7, 8)
+                                mirror: LayoutMirroring.enabled
+                                imageColor: appWindow.theme.foreground
+                            }
+
+                            BaseLabel
+                            {
+                                id: folderText
+                                readonly property bool isCurrent: picker.folder === foldersBar.folders[index].fullPath
+                                text: foldersBar.folders[index].folderName
+                                font: uicore.buildFont({weight: isCurrent ?
+                                                               (appWindow.uiver === 1 ? Font.Bold : Font.Medium) :
+                                                               Font.Normal
+                                                       })
+                                color: appWindow.uiver === 1 ?
+                                           appWindow.theme.foreground :
+                                           (isCurrent ? appWindow.theme_v2.textColor : appWindow.theme_v2.textColor2)
+                                Layout.preferredHeight: implicitHeight + supposedContentItemSpacing
+                                verticalAlignment: Text.AlignVCenter
                             }
                         }
 
-                        BaseLabel {
-                            id: folderText
-                            text: foldersBar.folders[index].folderName
-                            anchors.verticalCenter: parent.verticalCenter
-                            anchors.left: toolbarArrow.right
-                            anchors.leftMargin: 3
-                            font.bold: picker.folder == foldersBar.folders[index].fullPath ? true : false
-                        }
-
-                        MouseArea {
+                        MouseArea
+                        {
                             anchors.fill: parent
                             onClicked: {
                                 picker.resetFolder(foldersBar.folders[index].fullPath)
@@ -209,159 +208,153 @@ Page {
                 }
             }
         }
+
+        SvgImage_V2
+        {
+            visible: appWindow.uiver !== 1
+            source: Qt.resolvedUrl("../V2/sort.svg")
+
+            MouseArea {
+                anchors.fill: parent
+                anchors.margins: -20*appWindow.zoom // avoid pixel hunting
+                onClicked: v2_sortMenu.open()
+            }
+
+            FilePickerSortModeDrawer_V2 {
+                id: v2_sortMenu
+            }
+        }
     }
 
-    ListView {
+    ListViewItemSeparator_V2
+    {
+        visible: appWindow.uiver !== 1
+        Layout.fillWidth: true
+    }
+
+    ListView
+    {
         id: foldersList
-        anchors.top: foldersBar.bottom
-        anchors.bottom: parent.bottom
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.leftMargin: 15
-        anchors.rightMargin: 5
+
+        enabled: folderListModel.status !== FolderListModel.Loading
+
+        Layout.fillWidth: true
+        Layout.fillHeight: true
+        Layout.leftMargin: picker.padding // offset relative to foldersBar
+
         model: folderListModel
-        delegate: fileListDelegate
+
         clip: true
 
         boundsBehavior: Flickable.StopAtBounds
 
-        Component {
-            id: fileListDelegate
-            Rectangle {
-                height: 40
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.leftMargin: 15
-                color: "transparent"
+        delegate: Item
+        {
+            width: foldersList.width
+            height: children[0].height + supposedContentItemSpacing
 
-                Image {
-                    id: folderIcon
-                    height: 20
-                    width: visible ? 20 : 0
-                    anchors.left: parent.left
-                    anchors.verticalCenter: parent.verticalCenter
-                    source: Qt.resolvedUrl("../../images/mobile/folder.svg")
-                    sourceSize.width: 20
-                    sourceSize.height: 20
-                    fillMode: Image.PreserveAspectFit
+            RowLayout
+            {
+                width: parent.width
+                anchors.centerIn: parent
+
+                spacing: 8*appWindow.zoom
+
+                SvgImage_V2
+                {
                     visible: folderListModel.isFolder(index)
-                    layer {
-                        effect: MultiEffect {
-                            colorization: 1.0
-                            colorizationColor: appWindow.theme.foreground
-                        }
-                        enabled: true
-                    }
+                    source: Qt.resolvedUrl("../../images/mobile/folder.svg")
+                    sourceSize: Qt.size(20, 20)
+                    fillMode: Image.PreserveAspectFit
+                    imageColor: appWindow.uiver === 1 ?
+                                    appWindow.theme.foreground :
+                                    appWindow.theme_v2.primary
                 }
 
-                Rectangle {
-                    anchors.left: folderIcon.right
-                    anchors.right: parent.right
-                    height: parent.height
-                    color: "transparent"
-
-                    Rectangle {
-                        id: fileMarker
-                        visible: !folderListModel.isFolder(index)
-                        width: visible ? 8 : 0
-                        height: 8
-                        radius: 4
-                        color: appWindow.theme.foreground
-                        anchors.verticalCenter: parent.verticalCenter
-                        anchors.left: parent.left
-                    }
-                    BaseLabel {
-                        leftPadding: qtbug.leftPadding(fileMarker.width + 10, 5)
-                        rightPadding: qtbug.rightPadding(fileMarker.width + 10, 5)
-                        width: parent.width - arrowRight.width - 20
-                        anchors.verticalCenter: parent.verticalCenter
-                        anchors.left: parent.left
-                        text: fileName
-                        elide: Label.ElideMiddle
-                    }
-                    Image {
-                        id: arrowRight
-                        anchors.verticalCenter: parent.verticalCenter
-                        anchors.right: parent.right
-                        anchors.leftMargin: 10
-                        anchors.rightMargin: 10
-                        source: Qt.resolvedUrl("../../images/mobile/arrow_right.svg")
-                        sourceSize.width: 7
-                        sourceSize.height: 8
-                        visible: folderListModel.isFolder(index)
-                        mirror: LayoutMirroring.enabled
-                        layer {
-                            effect: MultiEffect {
-                                colorization: 1.0
-                                colorizationColor: appWindow.theme.foreground
-                            }
-                            enabled: true
-                        }
-                    }
-                    MouseArea {
-                        anchors.fill: parent
-                        onClicked: {
-                            onItemClick(fileName)
-                        }
-                    }
+                Rectangle
+                {
+                    id: fileMarker
+                    visible: !folderListModel.isFolder(index)
+                    implicitWidth: 8
+                    implicitHeight: 8
+                    radius: 4
+                    color: appWindow.uiver === 1 ?
+                               appWindow.theme.foreground :
+                               appWindow.theme_v2.textColor
                 }
+
+                BasePageLabel
+                {
+                    text: fileName
+                    elide: Label.ElideMiddle
+                    Layout.fillWidth: true
+                }
+
+                SvgImage_V2
+                {
+                    visible: appWindow.uiver === 1 &&
+                             folderListModel.isFolder(index)
+                    source: Qt.resolvedUrl("../../images/mobile/arrow_right.svg")
+                    sourceSize: Qt.size(7, 8)
+                    mirror: LayoutMirroring.enabled
+                    imageColor: appWindow.theme.foreground
+                }
+            }
+
+            MouseArea
+            {
+                anchors.fill: parent
+                onClicked: onItemClick(fileName)
             }
         }
 
-        footer: Rectangle {
-            width: foldersList.width
-            height: 100
-            color: appWindow.theme.background
+        RoundButton
+        {
+            visible: onlyFolders && !foldersList.flicking && !foldersList.dragging
+            onClicked: createFolderDialog.openDialog(App.tools.url(folderListModel.folder).toLocalFile())
+
+            width: 58
+            height: 58
+            radius: Math.round(width / 2)
+
+            padding: 0
+            spacing: 0
+
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            anchors.rightMargin: 20
+            anchors.bottomMargin: 20
+
+            Material.elevation: 0
+            Material.background: appWindow.uiver === 1 ?
+                                     appWindow.theme.selectModeBarAndPlusBtn :
+                                     appWindow.theme_v2.primary
+            display: AbstractButton.IconOnly
+
+            icon.source: Qt.resolvedUrl("../../images/mobile/add_folder.svg")
+            icon.width: 24
+            icon.height: 24
+            icon.color: "#fff"
+        }
+
+        BasePageLabel {
+            visible: folderListModel.status == FolderListModel.Ready && folderListModel.count == 0
+            text: qsTr("Empty folder") + App.loc.emptyString
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top: parent.top
+            anchors.topMargin: 150
         }
     }
 
-    RoundButton
+    BaseDialogButton
     {
-        id: createFolderBtn
-
-        visible: onlyFolders && !foldersList.flicking && !foldersList.dragging
-        onClicked: createFolderDialog.openDialog(App.tools.url(folderListModel.folder).toLocalFile())
-
-        width: 58
-        height: 58
-        radius: Math.round(width / 2)
-
-        padding: 0
-        spacing: 0
-
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
-        anchors.rightMargin: 20
-        anchors.bottomMargin: 20
-
-        Material.elevation: 0
-        Material.background: appWindow.theme.selectModeBarAndPlusBtn
-        display: AbstractButton.IconOnly
-
-        icon.source: Qt.resolvedUrl("../../images/mobile/add_folder.svg")
-        icon.width: 24
-        icon.height: 24
-        icon.color: "#fff"
-    }
-
-    BaseLabel {
-        visible: folderListModel.status == FolderListModel.Ready && folderListModel.count == 0
-        text: qsTr("Empty folder") + App.loc.emptyString
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.top: parent.top
-        anchors.topMargin: 150
-    }
-
-    Rectangle {
-        id: pageOverlay
-        width: parent.width
-        height: parent.height
-        color: appWindow.theme.dimming
-        visible: folderListModel.status == FolderListModel.Loading
-        MouseArea {
-            anchors.fill: parent
-            propagateComposedEvents: false
-        }
+        visible: appWindow.uiver !== 1 &&
+                 onlyFolders
+        Layout.topMargin: supposedContentItemSpacing
+        text: qsTr("OK") + App.loc.emptyString
+        primary: true
+        Layout.fillWidth: true
+        onClicked: doOK()
     }
 
     FilePickerSortDialog {
@@ -391,7 +384,7 @@ Page {
         return folderListModel.isFolder(folderListModel.indexOf(folderListModel.folder + "/" + fileName));
     }
     function canMoveUp() {
-        return folderListModel.folder.toString() !== rootFolder;
+        return folderListModel.folder.toString() !== currentStorageRootFolder;
     }
 
     function resetFolder(folderName)
@@ -426,12 +419,12 @@ Page {
         setCurrentStorage();
 
         var folders_str = folder.toString();
-        folders_str = folders_str.replace(rootFolder, '');
+        folders_str = folders_str.replace(currentStorageRootFolder, '');
         var models = [];
-        models.push({folderName: currentStorageName, fullPath: rootFolder});
+        models.push({folderName: currentStorageName, fullPath: currentStorageRootFolder});
         if (folders_str !== '') {
             var folders_arr = folders_str.split("/");
-            var last_path = rootFolder;
+            var last_path = currentStorageRootFolder;
             for (var i = 0; i < folders_arr.length; i++) {
                 if (folders_arr[i] !== '') {
                     last_path = concatFolders(last_path, folders_arr[i]);
@@ -456,8 +449,6 @@ Page {
 
             if (storage.isPrimary || folder_str.startsWith(path)) {
                 currentStorageIndex = i;
-                currentStorageName = storage.label;
-                rootFolder = path;
 
                 if (folder_str.startsWith(path)) {
                     break;
@@ -466,14 +457,15 @@ Page {
         }
     }
 
-    function defineStorageList() {
-        var storage;
-        storageList.model.clear();
+    function defineStorageList()
+    {
+        storageListModel.clear();
 
-        for (var i = 0; i < App.storages.storagesCount(); i++) {
-            storage = App.storages.storageInfo(i);
+        for (var i = 0; i < App.storages.storagesCount(); i++)
+        {
+            let storage = App.storages.storageInfo(i);
 
-            storageList.model.insert(i, {'label': storage.label, 'unrestrictedPath': storage.unrestrictedPath,
+            storageListModel.insert(i, {'label': storage.label, 'unrestrictedPath': storage.unrestrictedPath,
                                     'isUnrestrictedPathAppSpecific': storage.isUnrestrictedPathAppSpecific,
                                     'isPrimary': storage.isPrimary, 'isRemovable': storage.isRemovable
                                 });

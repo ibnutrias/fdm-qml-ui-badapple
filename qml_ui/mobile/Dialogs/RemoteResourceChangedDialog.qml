@@ -5,74 +5,74 @@ import org.freedownloadmanager.fdm
 import "../BaseElements"
 import "../../common/Tools"
 
-Dialog {
+CenteredDialog {
     id: root
 
     parent: Overlay.overlay
 
-    x: Math.round((appWindow.width - width) / 2)
-    y: Math.round((appWindow.height - height) / 2)
-
     modal: true
 
     title: qsTr("Remote resource changed") + App.loc.emptyString
-    width: Math.round(appWindow.width * 0.8)
 
     signal remoteResourceChanged(int id)
-    onRemoteResourceChanged: downloadsListModel.append({'id': id});
+    onRemoteResourceChanged: (id) => downloadsListModel.append({'id': id});
 
-    contentItem: ColumnLayout {
-        width: parent.width
-        spacing: 20
+    BaseFontMetrics
+    {
+        id: fm
+    }
 
-        ListView {
-            id: downloadsList
-            clip: true
-            Layout.fillWidth: true
-            Layout.preferredHeight: Math.min(contentHeight, 150)
-            ScrollBar.vertical: ScrollBar {
-                active: parent.contentHeight > 150
-            }
-            model: ListModel {
-                id: downloadsListModel
-            }
-
-            delegate: Rectangle {
-                width: parent.width
-                height: lbl.height
-                color: 'transparent'
-
-                BaseLabel {
-                    id: lbl
-                    width: parent.width
-                    elide: Text.ElideMiddle
-                    color: "#737373"
-                    DownloadsItemTools {
-                        id: downloadsItemTools
-                        itemId: downloadsListModel.count > 0 ? downloadsListModel.get(index).id : -1
-                    }
-                    text: downloadsItemTools.hasChildDownloads ? downloadsItemTools.destinationPath : downloadsItemTools.tplPathAndTitle
-                }
-            }
+    ListView {
+        id: downloadsList
+        clip: true
+        Layout.fillWidth: true
+        Layout.maximumWidth: root.ctMaxWidth
+        Layout.preferredHeight: Math.min(contentHeight, 150)
+        ScrollBar.vertical: ScrollBar {
+            active: parent.contentHeight > 150
+        }
+        model: ListModel {
+            id: downloadsListModel
         }
 
-        BaseCheckBox {
-            id: rememberField
-            text: qsTr("Always re-download") + App.loc.emptyString
+        implicitWidth: {
+            let r = 0;
+            for (let i = 0; i < downloadsListModel.count; ++i) {
+                r = Math.max(r, fm.advanceWidth(displayPath(downloadsListModel.get(i).id)));
+            }
+            return r + fm.font.pixelSize*fm.font.pointSize*0;
         }
 
-        RowLayout {
-            DialogButton
-            {
-                text: qsTr("Re-download") + App.loc.emptyString
-                onClicked: redownloadClicked()
-            }
+        delegate: BaseLabel {
+            width: parent.width
+            elide: Text.ElideMiddle
+            color: appWindow.uiver === 1 ?
+                       "#737373" :
+                       appWindow.theme_v2.textColor2
+            text: index < downloadsListModel.count ?
+                      displayPath(downloadsListModel.get(index).id) :
+                      ""
+        }
+    }
 
-            DialogButton
-            {
-                text: qsTr("Cancel") + App.loc.emptyString
-                onClicked: cancelClicked()
-            }
+    BaseCheckBox {
+        id: rememberField
+        text: qsTr("Always re-download") + App.loc.emptyString
+    }
+
+    BaseDialogButtonsLayout 
+    {
+        BaseDialogButton
+        {
+            text: qsTr("Re-download") + App.loc.emptyString
+            primary: true
+            onClicked: redownloadClicked()
+        }
+
+        BaseDialogButton
+        {
+            text: qsTr("Cancel") + App.loc.emptyString
+            onClicked: cancelClicked()
         }
     }
 
@@ -95,5 +95,14 @@ Dialog {
 
     function cancelClicked() {
         root.close();
+    }
+
+    function displayPath(id) {
+        let info = App.downloads.infos.info(id);
+        if (!info)
+            return "";
+        return info.hasChildDownloads ?
+                    info.destinationPath :
+                    info.destinationPath + '/' + info.title;
     }
 }

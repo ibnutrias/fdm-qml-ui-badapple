@@ -5,6 +5,7 @@ import org.freedownloadmanager.fdm.abstractdownloadsui
 import "../BaseElements"
 import "../BaseElements/V2"
 import "../../common/Tools"
+import "../../common/V2"
 
 Item
 {
@@ -13,23 +14,13 @@ Item
     readonly property bool running: downloadsItemTools.indicatorInProgress
     readonly property bool unkSize: downloadsItemTools.infinityIndicator
 
-    readonly property string runningStatusText:
-        (downloadsItemTools.performingLo ? downloadsItemTools.loUiText :
-        downloadsItemTools.inCheckingFiles ? qsTr('Checking files') :
-        downloadsItemTools.inMergingFiles ? qsTr('Merging media streams') :
-        downloadsItemTools.inWaitingForMetadata ? qsTr("Requesting info") : "") + App.loc.emptyString
-
-    readonly property bool absolutelyFinished: downloadsItemTools.finished && !runningStatusText
-
-    readonly property string n_a: qsTr("n/a") + App.loc.emptyString
-
     implicitWidth: p.visible ? p.implicitWidth : e.implicitWidth
     implicitHeight: p.visible ? p.implicitHeight : e.implicitHeight
 
     Error_V2
     {
         id: e
-        visible: downloadsItemTools.inError && !runningStatusText
+        visible: downloadsItemTools.showError
         error: downloadsItemTools.error
         anchors.fill: parent
     }
@@ -46,7 +37,7 @@ Item
 
         SlimProgressBar_V2
         {
-            visible: !absolutelyFinished
+            visible: downloadsItemTools.showProgressBar
             value: downloadsItemTools.progress
             indeterminate: unkSize
             running: root.running
@@ -57,26 +48,27 @@ Item
             Layout.maximumWidth: 524*appWindow.zoom
             Layout.preferredHeight: 16*appWindow.zoom
             radius: 4*appWindow.zoom
+            zoom: appWindow.zoom
         }
 
         BaseLabel
         {
-            visible: !absolutelyFinished && text
-            text: unkSize ? n_a : downloadsItemTools.progress + "%"
+            visible: downloadsItemTools.showProgressBar && text
+            text: unkSize ? downloadsItemTools.n_a : downloadsItemTools.progress + "%"
         }
 
         BaseLabel
         {
             visible: text
             text: {
-                if (runningStatusText)
-                    return runningStatusText;
+                if (downloadsItemTools.runningStatusText)
+                    return downloadsItemTools.runningStatusText;
 
-                if (downloadsItemTools.inQueue)
-                    return qsTr("Queued") + App.loc.emptyString;
+                if (downloadsItemTools.queuedStatusText)
+                    return downloadsItemTools.queuedStatusText;
 
-                if (downloadsItemTools.finished)
-                    return qsTr("Completed") + App.loc.emptyString;
+                if (downloadsItemTools.finishedStatusText)
+                    return downloadsItemTools.finishedStatusText;
 
                 return "";
             }
@@ -85,16 +77,14 @@ Item
         BaseLabel
         {
             visible: downloadsItemTools.eta >= 0
-            text: qsTr("Remaining") + ':'
+            text: qsTr("Remaining") + ':' + App.loc.emptyString
             color: appWindow.theme_v2.bg700
         }
 
         BaseLabel
         {
             visible: downloadsItemTools.eta >= 0
-            text: downloadsItemTools.eta >= 0 ?
-                      JsTools.timeUtils.remainingTime(downloadsItemTools.eta) + App.loc.emptyString :
-                      ""
+            text: downloadsItemTools.etaText
             color: uicore.snailTools.isSnail ? appWindow.theme_v2.amber : appWindow.theme_v2.textColor
         }
 

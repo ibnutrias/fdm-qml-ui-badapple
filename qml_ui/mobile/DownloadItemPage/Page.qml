@@ -15,7 +15,7 @@ Page {
     property int tabIndex: 0
     property var currentTabsModel: []
 
-    DownloadsItemTools {
+    DownloadsItemTools2 {
         id: downloadsItemTools
         itemId: downloadItemId
         onHasDetailsChanged: updateCurrentTabsModel()
@@ -24,55 +24,46 @@ Page {
         property var itemOpacity: downloadsItemTools.locked ? 0.4 : 1
     }
 
-    header: Column {
-        id: toolbar
-        height: 108
-        width: root.width
-
-        Toolbar {}
-
-        ToolBarShadow {}
-
-        ExtraToolBar {
-            Row {
-                id: filtersBar
-                visible: currentTabsModel.length > 1
-
-                property int filter: tabIndex
-
-                height: parent.height
-                anchors.horizontalCenter: parent.horizontalCenter
-                spacing: tabs.count > 3 ? 10 : 30
-
-                Repeater {
-                    id: tabs
-                    model: currentTabsModel
-
-                    ItemPageFilterButton {
-                        text: modelData.name
-                        value: modelData.id
-                    }
-                }
-            }
-        }
+    header: Loader {
+        source: Qt.resolvedUrl(appWindow.uiver === 1 ?
+                                   "PageHeader.qml" :
+                                   "V2/PageHeader_V2.qml")
     }
 
-    GeneralTab {
-        visible: filtersBar.filter === 0
+    footer: Loader {
+        source: appWindow.uiver === 1 ?
+                    "" :
+                    Qt.resolvedUrl("V2/PageFooter_V2.qml")
+
+    }
+
+    readonly property int filter: appWindow.uiver === 1 ?
+                                      header.item.filter :
+                                      footer.item.filter
+
+    Loader {
+        visible: filter === 0
+        anchors.fill: parent
+        anchors.margins: appWindow.uiver === 1 ? 14 : appWindow.theme_v2.mainContentMargins*appWindow.zoom
+        source: Qt.resolvedUrl(appWindow.uiver === 1 ? "GeneralTab.qml" : "V2/GeneralTab_V2.qml")
     }
 
     DetailsTab {
-        visible: filtersBar.filter === 3
+        visible: filter === 3
     }
 
-    Files {
-        visible: filtersBar.filter === 1
-        downloadItemId: downloadsItemTools.itemId
-        downloadInfo: downloadsItemTools.item
+    Loader {
+        visible: filter === 1
+        anchors.fill: parent
+        anchors.margins: appWindow.uiver === 1 ? 0 : appWindow.theme_v2.mainContentMargins*appWindow.zoom
+        source: Qt.resolvedUrl(appWindow.uiver === 1 ? "Files.qml" : "V2/FilesTab_V2.qml")
     }
 
-    ConnectionsTab {
-        visible: filtersBar.filter === 2
+    Loader {
+        visible: filter === 2
+        anchors.fill: parent
+        anchors.margins: appWindow.uiver === 1 ? 14 : appWindow.theme_v2.mainContentMargins*appWindow.zoom
+        source: Qt.resolvedUrl(appWindow.uiver === 1 ? "ConnectionsTab.qml" : "V2/ConnectionsTab_V2.qml")
     }
 
     DeleteDownloadsDialog {

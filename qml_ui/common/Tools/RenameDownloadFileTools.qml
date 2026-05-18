@@ -6,6 +6,8 @@ Item
 {
     id: root
 
+    visible: false
+
     signal finished()
 
     property double downloadId: 0

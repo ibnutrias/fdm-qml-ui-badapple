@@ -133,8 +133,15 @@ Page {
             Layout.fillWidth: true
         }
 
+        DonateBannerStrip {
+            id: donate
+            visible: App.features.hasFeature(AppFeatures.Donate) &&
+                     App.donate.showDonate
+            Layout.fillWidth: true
+        }
+
         Item {
-            visible: appWindow.uiver !== 1 && banners.visible
+            visible: appWindow.uiver !== 1 && (banners.visible || donate.visible)
             implicitHeight: 16*appWindow.zoom
             implicitWidth: 1
         }

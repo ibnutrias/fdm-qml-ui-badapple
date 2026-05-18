@@ -18,81 +18,83 @@ CenteredDialog
     modal: true
     closePolicy: Popup.NoAutoClose | Popup.CloseOnEscape
 
+    parent: Overlay.overlay
+
     title: qsTr("%1 is missing permissions").arg(App.shortDisplayName)
 
-    contentItem: ColumnLayout
+    ColumnLayout
     {
-        spacing: 10
-
-        ColumnLayout
+        Repeater
         {
-            Repeater
-            {
-                model: root.requiredPermissions.concat(optionalPermissions)
+            model: root.requiredPermissions.concat(optionalPermissions)
 
-                ColumnLayout
+            ColumnLayout
+            {
+                RowLayout
                 {
-                    RowLayout
+                    spacing: 10*appWindow.zoom
+
+                    BaseLabel
                     {
-                        spacing: 10
-
-                        Label
-                        {
-                            text: App.osPermissionsMgr.permissionDisplayName(modelData) + App.loc.emptyString
-                            font.bold: true
-                        }
-
-                        Label
-                        {
-                            visible: index < root.requiredPermissions.length
-                            text: qsTr("(required)") + App.loc.emptyString
-                            color: appWindow.theme.errorMessage
-                            font.italic: true
-                        }
+                        text: App.osPermissionsMgr.permissionDisplayName(modelData) + App.loc.emptyString
+                        font: uicore.buildFont({bold: true}, uicore.fontSizeV1(16*appWindow.fontZoom))
                     }
 
-                    Label
+                    BaseLabel
                     {
-                        text: App.osPermissionsMgr.permissionRationaleText(modelData) + App.loc.emptyString
-                        wrapMode: Label.Wrap
-                        Layout.maximumWidth: appWindow.width*0.8
+                        visible: index < root.requiredPermissions.length
+                        text: qsTr("(required)") + App.loc.emptyString
+                        color: appWindow.uiver === 1 ?
+                                   appWindow.theme.errorMessage :
+                                   appWindow.theme_v2.danger
+                        font: uicore.buildFont({italic: true}, uicore.fontSizeV1(16*appWindow.fontZoom))
                     }
+                }
+
+                BaseLabel
+                {
+                    text: App.osPermissionsMgr.permissionRationaleText(modelData) + App.loc.emptyString
+                    wrapMode: Label.Wrap
+                    Layout.fillWidth: true
+                    Layout.maximumWidth: ctMaxWidth
+                    font: uicore.buildFont({}, uicore.fontSizeV1(16*appWindow.fontZoom))
                 }
             }
         }
+    }
 
-        Label
+    BaseLabel
+    {
+        text: qsTr("You can grant these permissions using the Application details screen within your system's settings.") + App.loc.emptyString
+        wrapMode: Label.WordWrap
+        Layout.fillWidth: true
+        Layout.maximumWidth: ctMaxWidth
+        font: uicore.buildFont({}, uicore.fontSizeV1(16*appWindow.fontZoom))
+    }
+
+    BaseCheckBox
+    {
+        visible: !root.missingRequiredPermissions
+        text: qsTr("Don't show again") + App.loc.emptyString
+        onClicked: uiSettingsTools.settings.dontShowOsPermissionsDialog = checked
+    }
+
+    BaseDialogButtonsLayout
+    {
+        BaseDialogButton
         {
-            text: qsTr("You can grant these permissions using the Application details screen within your system's settings.") + App.loc.emptyString
-            wrapMode: Label.Wrap
-            Layout.maximumWidth: appWindow.width*0.8
+            text: qsTr("Grant permissions") + App.loc.emptyString
+            primary: true
+            onClicked: {
+                App.openAppOsPermissionsSettings();
+                root.close();
+            }
         }
 
-        BaseCheckBox
+        BaseDialogButton
         {
-            visible: !root.missingRequiredPermissions
-            text: qsTr("Don't show again") + App.loc.emptyString
-            onClicked: uiSettingsTools.settings.dontShowOsPermissionsDialog = checked
-        }
-
-        RowLayout
-        {
-            Layout.alignment: Qt.AlignHCenter
-
-            DialogButton
-            {
-                text: qsTr("Grant permissions") + App.loc.emptyString
-                onClicked: {
-                    App.openAppOsPermissionsSettings();
-                    root.close();
-                }
-            }
-
-            DialogButton
-            {
-                text: (root.missingRequiredPermissions ? qsTr("Quit") : qsTr("Close")) + App.loc.emptyString
-                onClicked: root.close()
-            }
+            text: (root.missingRequiredPermissions ? qsTr("Quit") : qsTr("Close")) + App.loc.emptyString
+            onClicked: root.close()
         }
     }
 

@@ -3,16 +3,14 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Dialogs
 import org.freedownloadmanager.fdm
+import org.freedownloadmanager.fdm.appfeatures
 import "../BaseElements"
 
-Page
+BaseSettingsPage
 {
     id: root
 
-    header: PageHeaderWithBackArrow {
-        pageTitle: qsTr("Troubleshooting") + App.loc.emptyString
-        onPopPage: root.StackView.view.pop()
-    }
+    title: qsTr("Troubleshooting") + App.loc.emptyString
 
     RowLayout
     {
@@ -43,6 +41,8 @@ Page
 
             BaseLabel
             {
+                enabled: !App.isLogDisabled()
+
                 text: "<a href='#'>" + qsTr("Archive logs...") + App.loc.emptyString + "</a>"
 
                 onLinkActivated: logsFileDlg.open()
@@ -72,6 +72,8 @@ Page
             }
 
             RowLayout {
+                enabled: !App.isLogDisabled()
+
                 BaseCheckBox
                 {
                     text: qsTr("Enable enhanced logging") + App.loc.emptyString
@@ -82,13 +84,14 @@ Page
                 BaseLabel {
                     text: "*"
                     color: "red"
-                    font.pixelSize: 14
-                    font.bold: true
+                    font: uicore.buildFont({bold: true})
                     Layout.alignment: Qt.AlignTop
                 }
             }
 
             RowLayout {
+                enabled: !App.isLogDisabled()
+
                 BaseCheckBox
                 {
                     text: qsTr("Enable LT alerts logging") + App.loc.emptyString
@@ -98,13 +101,14 @@ Page
                 BaseLabel {
                     text: "*"
                     color: "red"
-                    font.pixelSize: 14
-                    font.bold: true
+                    font: uicore.buildFont({bold: true})
                     Layout.alignment: Qt.AlignTop
                 }
             }
 
             RowLayout {
+                enabled: !App.isLogDisabled()
+
                 BaseCheckBox
                 {
                     text: qsTr("Enable downloads management logging") + App.loc.emptyString
@@ -114,8 +118,7 @@ Page
                 BaseLabel {
                     text: "*"
                     color: "red"
-                    font.pixelSize: 14
-                    font.bold: true
+                    font: uicore.buildFont({bold: true})
                     Layout.alignment: Qt.AlignTop
                 }
             }
@@ -125,8 +128,7 @@ Page
                 BaseLabel {
                     text: "*"
                     color: "red"
-                    font.pixelSize: 14
-                    font.bold: true
+                    font: uicore.buildFont({bold: true})
                     Layout.alignment: Qt.AlignTop
                 }
                 BaseLabel {
@@ -136,7 +138,13 @@ Page
 
             BaseLabel {
                 text: "<a href='#'>" + "Show GP vote offer UI" + App.loc.emptyString + "</a>"
-                onLinkActivated: voteBlock.start()
+                onLinkActivated: uicore.appReview.appReviewRequested()
+            }
+
+            BaseLabel {
+                visible: App.features.hasFeature(AppFeatures.Donate)
+                text: "<a href='#'>" + "Show Support project UI" + App.loc.emptyString + "</a>"
+                onLinkActivated: appWindow.forceShowDonateUi = true
             }
 
             BaseLabel {

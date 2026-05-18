@@ -12,6 +12,7 @@ Item
     BaseText_V2 {
         id: t
         visible: text
+        anchors.left: parent.left
         anchors.verticalCenter: parent.verticalCenter
         color: appWindow.theme_v2.bg700
     }

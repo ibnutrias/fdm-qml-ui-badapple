@@ -19,8 +19,7 @@ Rectangle {
         id: title
         anchors.left: parent.left
         text: root.text
-        font.bold: false
-        font.pixelSize: 13
+        font: uicore.buildFont({}, 13*appWindow.fontZoom)
         padding: 6
         leftPadding: qtbug.leftPadding(9, 0)
         rightPadding: qtbug.rightPadding(9, 0)

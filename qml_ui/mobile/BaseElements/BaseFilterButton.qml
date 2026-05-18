@@ -9,8 +9,10 @@ ToolButton {
 
     contentItem: Text {
         text: parent.text
+        width: parent.width
+        elide: Text.ElideRight
         font.weight: selected ? Font.DemiBold : Font.Normal
-        font.pixelSize: 14
+        font.pixelSize: 14*appWindow.fontZoom
         font.capitalization: Font.AllUppercase
         opacity: selected ? 1.0 : 0.5
         color: appWindow.theme.toolbarTextColor

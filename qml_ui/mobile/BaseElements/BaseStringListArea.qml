@@ -55,17 +55,9 @@ Item
 
             clip: true
 
-            TextArea.flickable: TextArea
+            TextArea.flickable: BaseTextArea
             {
                 id: textArea
-
-                background: Rectangle {
-                    color: appWindow.theme.background
-                }
-
-                color: appWindow.theme.foreground
-
-                focus: visible
 
                 horizontalAlignment: Text.AlignLeft
 

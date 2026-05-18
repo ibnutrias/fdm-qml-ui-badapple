@@ -5,6 +5,7 @@ import org.freedownloadmanager.fdm.abstractdownloadsui
 import "../BaseElements"
 import "../BaseElements/V2"
 import "../../common/Tools"
+import "../../common/V2"
 
 Item
 {
@@ -18,14 +19,6 @@ Item
 
     readonly property bool running: downloadsItemTools.indicatorInProgress
     readonly property bool unkSize: downloadsItemTools.infinityIndicator
-
-    readonly property string runningStatusText:
-        (downloadsItemTools.performingLo ? downloadsItemTools.loUiText :
-        downloadsItemTools.inCheckingFiles ? qsTr('Checking files') :
-        downloadsItemTools.inMergingFiles ? qsTr('Merging media streams') :
-        downloadsItemTools.inWaitingForMetadata ? qsTr("Requesting info") : "") + App.loc.emptyString
-
-    readonly property string n_a: qsTr("n/a") + App.loc.emptyString
 
     implicitWidth: meat.implicitWidth
     implicitHeight: meat.implicitHeight
@@ -41,7 +34,7 @@ Item
         Error_V2
         {
             id: error
-            visible: downloadsItemTools.inError && !runningStatusText
+            visible: downloadsItemTools.showError
             error: downloadsItemTools.error
             Layout.fillWidth: true
         }
@@ -51,18 +44,18 @@ Item
             id: statusText
             visible: text && !error.visible
             text: {
-                if (runningStatusText)
-                    return runningStatusText;
+                if (downloadsItemTools.runningStatusText)
+                    return downloadsItemTools.runningStatusText;
 
-                if (downloadsItemTools.inQueue)
-                    return qsTr("Queued") + App.loc.emptyString;
+                if (downloadsItemTools.queuedStatusText)
+                    return downloadsItemTools.queuedStatusText;
 
-                if (downloadsItemTools.finished)
-                    return qsTr("Completed") + App.loc.emptyString;
+                if (downloadsItemTools.finishedStatusText)
+                    return downloadsItemTools.finishedStatusText;
 
                 return "";
             }
-            color: runningStatusText ? appWindow.theme_v2.primary :
+            color: downloadsItemTools.runningStatusText ? appWindow.theme_v2.primary :
                    downloadsItemTools.inQueue ? appWindow.theme_v2.bg1000 :
                    (downloadsItemTools.finished && JsTools.timeUtils.isWithin24Hours(uicore.minuteUpdate ? model.finishedTime : model.finishedTime)) ? appWindow.theme_v2.primary :
                    appWindow.theme_v2.bg500
@@ -98,6 +91,7 @@ Item
             Layout.fillWidth: true
             Layout.preferredHeight: 12*appWindow.zoom
             radius: 4*appWindow.zoom
+            zoom: appWindow.zoom
             MouseArea
             {
                 id: maProgress
@@ -110,7 +104,7 @@ Item
         Item
         {
             implicitWidth: Math.max(defaultFontMetrics.advanceWidth("99%"),
-                                    defaultFontMetrics.advanceWidth(n_a)) +
+                                    defaultFontMetrics.advanceWidth(downloadsItemTools.n_a)) +
                            defaultFontMetrics.font.pixelSize*0
             Layout.fillHeight: true
 
@@ -119,7 +113,7 @@ Item
                 id: progressText
                 visible: (!downloadsItemTools.finished && !downloadsItemTools.canBeRestarted) ||
                          downloadsItemTools.performingLo
-                text: unkSize ? n_a : downloadsItemTools.progress + "%"
+                text: unkSize ? downloadsItemTools.n_a : downloadsItemTools.progress + "%"
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.right: parent.right
             }

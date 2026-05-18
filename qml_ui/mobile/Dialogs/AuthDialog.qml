@@ -4,7 +4,7 @@ import QtQuick.Layouts
 import org.freedownloadmanager.fdm
 import "../BaseElements"
 
-Dialog {
+CenteredDialog {
     id: root
 
     property string remoteName
@@ -16,109 +16,98 @@ Dialog {
 
     parent: Overlay.overlay
 
-    x: Math.round((appWindow.width - width) / 2)
-    y: Math.round((appWindow.height - height) / 2)
-
     title: qsTr("Authentication required") + App.loc.emptyString
 
-    contentItem: ColumnLayout {
+    BaseLabel
+    {
+        visible: remoteName
+        Layout.fillWidth: true
+        text: qsTr("%1 requires authentication").arg(remoteName) + App.loc.emptyString
+        wrapMode: Text.Wrap
+        font: uicore.buildFont({}, uicore.fontSizeV1(16*appWindow.fontZoom))
+    }
 
-        ColumnLayout {
+    BaseLabel
+    {
+        visible: realm
+        Layout.fillWidth: true
+        text: qsTr("The site says: \"%1\".").arg(realm) + App.loc.emptyString
+        wrapMode: Text.Wrap
+        font: uicore.buildFont({}, uicore.fontSizeV1(16*appWindow.fontZoom))
+    }
+
+    GridLayout
+    {
+        columns: 2
+        columnSpacing: 10*appWindow.zoom
+        rowSpacing: columnSpacing
+
+        BaseLabel
+        {
+            visible: !passwordOnly
+            text: qsTr("Username:") + App.loc.emptyString
+            font: uicore.buildFont({}, uicore.fontSizeV1(16*appWindow.fontZoom))
+        }
+
+        BaseTextField
+        {
+            id: usernameField
+            visible: !passwordOnly
+            focus: !passwordOnly
+            Layout.preferredWidth: 400
+            onAccepted: {
+                if (text)
+                    root.accept()
+            }
+            Keys.onEscapePressed: root.reject()
+            inputMethodHints: Qt.ImhNoAutoUppercase | Qt.ImhNoPredictiveText | Qt.ImhSensitiveData
+            enable_QTBUG_110471_workaround_2: true
+        }
+
+        BaseLabel
+        {
+            id: password
+            text: qsTr("Password:") + App.loc.emptyString
+            font: uicore.buildFont({}, uicore.fontSizeV1(16*appWindow.fontZoom))
+        }
+
+        BaseTextField
+        {
+            id: passField
+            focus: passwordOnly
+            inputMethodHints: Qt.ImhHiddenText | Qt.ImhNoPredictiveText | Qt.ImhSensitiveData
+            echoMode: TextInput.Password
+            passwordMaskDelay: 100
             Layout.fillWidth: true
-            Layout.leftMargin: 10
-            Layout.rightMargin: 10
-            spacing: 10
-
-            ColumnLayout {
-                visible:false
-                Layout.fillWidth: true
-                Layout.leftMargin: qtbug.leftMargin(80, 0)
-                Layout.rightMargin: qtbug.rightMargin(80, 0)
-
-                Label {
-                    visible: remoteName
-                    Layout.fillWidth: true
-                    text: qsTr("%1 requires authentication").arg(remoteName) + App.loc.emptyString
-                    wrapMode: Text.Wrap
-                    Layout.minimumHeight: 10
-                    horizontalAlignment: Text.AlignLeft
-                }
-                Label {
-                    visible: realm
-                    Layout.fillWidth: true
-                    text: qsTr("The site says: \"%1\".").arg(realm) + App.loc.emptyString
-                    wrapMode: Text.Wrap
-                    horizontalAlignment: Text.AlignLeft
-                }
+            enable_QTBUG_110471_workaround_2: true
+            onAccepted: {
+                if (text)
+                    root.accept()
             }
+            Keys.onEscapePressed: root.reject()
+        }
+    }
 
-            RowLayout {
-                visible: !passwordOnly
+    BaseCheckBox
+    {
+        id: rememberField
+        text: qsTr("remember") + App.loc.emptyString
+        font: uicore.buildFont({capitalization: Font.Capitalize}, uicore.fontSizeV1(16*appWindow.fontZoom))
+    }
 
-                Layout.fillWidth: true
+    BaseDialogButtonsLayout
+    {
+        BaseDialogButton
+        {
+            text: qsTr("Cancel") + App.loc.emptyString
+            onClicked: root.reject()
+        }
 
-                Label {
-                    Layout.preferredWidth: 80
-                    text: qsTr("Username:") + App.loc.emptyString
-                    horizontalAlignment: Text.AlignLeft
-                }
-
-                BaseTextField {
-                    id: usernameField
-                    focus: !passwordOnly
-                    Layout.preferredWidth: 400
-                    onAccepted: root.accept()
-                    Keys.onEscapePressed: root.reject()
-                    inputMethodHints: Qt.ImhNoAutoUppercase | Qt.ImhNoPredictiveText | Qt.ImhSensitiveData
-                    enable_QTBUG_110471_workaround_2: true
-                }
-            }
-
-            RowLayout {
-                Layout.fillWidth: true
-
-                Label {
-                    Layout.preferredWidth: 80
-                    text: qsTr("Password:") + App.loc.emptyString
-                    horizontalAlignment: Text.AlignLeft
-                }
-
-                BaseTextField {
-                    id: passField
-                    focus: passwordOnly
-                    inputMethodHints: Qt.ImhHiddenText | Qt.ImhNoPredictiveText | Qt.ImhSensitiveData
-                    echoMode: TextInput.Password
-                    passwordMaskDelay: 100
-                    Layout.fillWidth: true
-                    enable_QTBUG_110471_workaround_2: true
-                    onAccepted: root.accept()
-                    Keys.onEscapePressed: root.reject()
-                }
-            }
-
-            BaseCheckBox {
-                id: rememberField
-                text: qsTr("remember") + App.loc.emptyString
-            }
-
-            RowLayout {
-                Layout.topMargin: 10
-                Layout.bottomMargin: 10
-                Layout.alignment: Qt.AlignHCenter
-
-                spacing: 5
-
-                DialogButton {
-                    id: cnclBtn
-                    text: qsTr("Cancel") + App.loc.emptyString
-                    onClicked: root.reject()
-                }
-
-                DialogButton {
-                    text: qsTr("OK") + App.loc.emptyString
-                    onClicked: root.accept()
-                }
-            }
+        BaseDialogButton
+        {
+            text: qsTr("OK") + App.loc.emptyString
+            primary: true
+            onClicked: root.accept()
         }
     }
 }

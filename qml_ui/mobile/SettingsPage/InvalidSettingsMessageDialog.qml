@@ -10,6 +10,6 @@ AppMessageDialog
 
     title: "Invalid settings"
     text: root.lastInvalidSettingsMessage + qsTr(". Close anyway?") + App.loc.emptyString
-    buttons: buttonOk | buttonCancel
+    hasCancelButton: true
     onOkClicked: popPage()
 }

@@ -9,10 +9,6 @@ import "../../BaseElements/V2"
 import "../../../common"
 
 ColumnLayout {
-    visible: downloadTools.batchDownload
-    Layout.topMargin: 8*appWindow.zoom
-    Layout.fillWidth: true
-    Layout.preferredHeight: Math.min(list.count * 26*appWindow.fontZoom + 35*appWindow.zoom, Math.max(130*appWindow.fontZoom, ((appWindow.height <= 680*appWindow.zoom) ? appWindow.height - 480*appWindow.zoom : (appWindow.height > 680*appWindow.zoom && appWindow.height < 810*appWindow.zoom ? 200*appWindow.zoom : appWindow.height - 610*appWindow.zoom))))
     spacing: 5*appWindow.zoom
 
     property bool showAgeCol
@@ -43,10 +39,9 @@ ColumnLayout {
         }
     }
 
-    Rectangle {
+    Item {
         Layout.fillWidth: true
-        Layout.preferredHeight: 20*appWindow.zoom
-        color: "transparent"
+        implicitHeight: childrenRect.height
 
         BaseLabel {
             text: qsTr("Download links (%1 selected)").arg(list.checkedUrlsCount) + App.loc.emptyString
@@ -84,6 +79,9 @@ ColumnLayout {
     Rectangle {
         Layout.fillWidth: true
         Layout.fillHeight: true
+        implicitWidth: list.implicitWidth
+        implicitHeight: list.implicitHeight + 10*appWindow.zoom
+
         border.color: appWindow.uiver === 1 ?
                           appWindow.theme.border :
                           "transparent"
@@ -102,11 +100,15 @@ ColumnLayout {
 
         ListView {
             id: list
+
             anchors.fill: parent
-            spacing: 10*appWindow.zoom
-            clip: true
             anchors.topMargin: 5*appWindow.zoom
             anchors.bottomMargin: 5*appWindow.zoom
+
+            spacing: 10*appWindow.zoom
+            clip: true
+
+            implicitHeight: count ? (itemAtIndex(0).implicitHeight + spacing)*count - spacing : 0
 
             flickableDirection: Flickable.VerticalFlick
             ScrollBar.vertical: BaseScrollBar_V2 {
@@ -132,6 +134,7 @@ ColumnLayout {
             model: ListModel {}
 
             delegate: RowLayout {
+                anchors.left: parent.left
                 width: parent.width - lvsb.myWrapSize
                 spacing: 10*appWindow.zoom
 

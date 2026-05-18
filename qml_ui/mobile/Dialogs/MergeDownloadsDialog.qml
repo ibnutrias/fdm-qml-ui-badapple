@@ -5,64 +5,46 @@ import org.freedownloadmanager.fdm
 import "../../common/Tools"
 import "../BaseElements"
 
-Dialog {
+CenteredDialog {
     id: root
 
     parent: Overlay.overlay
 
-    x: Math.round((appWindow.width - width) / 2)
-    y: Math.round((appWindow.height - height) / 2)
-    width: Math.round(appWindow.width * 0.8)
-
     modal: true
 
-    contentItem: ColumnLayout {
-        spacing: 20
-        clip: true
+    title: qsTr("The download already exists") + App.loc.emptyString
+
+    BaseLabel {
         visible: mergeTools.dialogEnabled
-        width: parent.width
+        text: downloadsItemTools.resourceUrl.length > 0 ? downloadsItemTools.resourceUrl : downloadsItemTools.title
+        elide: Text.ElideMiddle
+        Layout.fillWidth: true
+        Layout.maximumWidth: root.ctMaxWidth
+        horizontalAlignment: Text.AlignLeft
+        font: uicore.buildFont({}, uicore.fontSizeV1(16*appWindow.fontZoom))
+        DownloadsItemTools {
+            id: downloadsItemTools
+            itemId: mergeTools.existingDownloadId
+        }
+    }
 
-        DialogTitle {
-            text: qsTr("The download already exists") + App.loc.emptyString
-            Layout.fillWidth: true
+    BaseDialogButtonsLayout 
+    {
+        BaseDialogButton {
+            text: qsTr("Skip") + App.loc.emptyString
+            onClicked: mergeTools.accept()
         }
 
-        Label {
-            visible: mergeTools.dialogEnabled
-            text: downloadsItemTools.resourceUrl.length > 0 ? downloadsItemTools.resourceUrl : downloadsItemTools.title
-            color: "#737373"
-            elide: Text.ElideMiddle
-            Layout.fillWidth: true
-            horizontalAlignment: Text.AlignLeft
-            DownloadsItemTools {
-                id: downloadsItemTools
-                itemId: mergeTools.existingDownloadId
-            }
+        BaseDialogButton {
+            visible: App.downloads.mergeOptionsChooser.pendingNewDownloadIdsCount > 1
+            text: qsTr("Skip all (%1)").arg(App.downloads.mergeOptionsChooser.pendingNewDownloadIdsCount) + App.loc.emptyString
+            onClicked: mergeTools.acceptAll()
         }
 
-        GridLayout {
-            Layout.fillWidth: true
-
-            DialogButton {
-                text: qsTr("Skip") + App.loc.emptyString
-                onClicked: mergeTools.accept()
-            }
-
-            DialogButton {
-                Layout.column: appWindow.smallScreen ? 0 : 1
-                Layout.row: appWindow.smallScreen ? 1 : 0
-                text: qsTr("Skip all (%1)").arg(App.downloads.mergeOptionsChooser.pendingNewDownloadIdsCount) + App.loc.emptyString
-                visible: App.downloads.mergeOptionsChooser.pendingNewDownloadIdsCount > 1
-                onClicked: mergeTools.acceptAll()
-            }
-
-            DialogButton {
-                Layout.column: appWindow.smallScreen ? 0 : 2
-                Layout.row: appWindow.smallScreen ? 2 : 0
-                visible: mergeTools.mergeBtnEnabled
-                text: qsTr("Download") + App.loc.emptyString
-                onClicked: mergeTools.dontMerge()
-            }
+        BaseDialogButton {
+            visible: mergeTools.mergeBtnEnabled
+            text: qsTr("Download") + App.loc.emptyString
+            onClicked: mergeTools.dontMerge()
         }
     }
 

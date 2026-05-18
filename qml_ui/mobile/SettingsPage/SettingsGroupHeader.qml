@@ -2,30 +2,24 @@ import QtQuick
 import QtQuick.Controls
 import "../BaseElements"
 
-Rectangle {
+Item {
     id: root
-    property string name
-    property int textWeight: Font.Bold
-    color: "transparent"
+    property alias name: headerText.text
+    property alias color: headerText.color
+    property double contentWidth: headerText.contentWidth + headerText.anchors.leftMargin
 
-    implicitHeight: headerText.height + 30
+    implicitHeight: headerText.implicitHeight + 30*appWindow.zoom
+    implicitWidth: headerText.implicitWidth + headerText.anchors.leftMargin + headerText.anchors.rightMargin
 
     BaseLabel {
         id: headerText
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.leftMargin: 20
-        anchors.rightMargin: 20
+        anchors.leftMargin: (appWindow.uiver === 1 ? 20 : appWindow.theme_v2.mainContentMargins)*appWindow.zoom
+        anchors.rightMargin: anchors.leftMargin
         anchors.verticalCenter: parent.verticalCenter
-        text: root.name
-        font.pixelSize: 17
-        font.weight: textWeight
+        font: uicore.buildFont({weight: appWindow.uiver === 1 ? Font.Bold : Font.Normal},
+                               (appWindow.uiver === 1 ? 17 : appWindow.theme_v2.fontSize)*appWindow.fontZoom)
         wrapMode: Text.WordWrap
-    }
-
-    TextMetrics {
-        id:     t_metrics
-        font:   headerText.font
-        text:   headerText.text
     }
 }

@@ -5,7 +5,7 @@ import org.freedownloadmanager.fdm
 import "../BaseElements"
 import "../../common/Tools"
 
-Dialog {
+CenteredDialog {
     id: root
 
     property int downloadId
@@ -13,57 +13,49 @@ Dialog {
 
     parent: Overlay.overlay
 
-    x: Math.round((appWindow.width - width) / 2)
-    y: Math.round((appWindow.height - height) / 2)
-
     modal: true
 
     title: qsTr("Moving download failed") + App.loc.emptyString
-    width: Math.round(appWindow.width * 0.8)
 
-    contentItem: ColumnLayout {
+    BaseLabel
+    {
         Layout.fillWidth: true
-        Layout.leftMargin: 10
-        Layout.rightMargin: 10
-        spacing: 3
+        Layout.maximumWidth: root.ctMaxWidth
+        text: qsTr("Error: %1").arg(errorMessage) + App.loc.emptyString
+        horizontalAlignment: Text.AlignLeft
+        color: appWindow.uiver === 1 ?
+                           appWindow.theme.errorMessage :
+                           appWindow.theme_v2.danger
+        font: uicore.buildFont({}, uicore.fontSizeV1(16*appWindow.fontZoom))
+    }
 
-        Label {
-            Layout.fillWidth: true
-            text: qsTr("Error: %1").arg(errorMessage) + App.loc.emptyString
-            Layout.bottomMargin: 7
-            horizontalAlignment: Text.AlignLeft
+    BaseLabel
+    {
+        id: lbl
+        visible: downloadsItemTools.tplPathAndTitle.length > 0
+        Layout.fillWidth: true
+        Layout.maximumWidth: root.ctMaxWidth
+        elide: Text.ElideMiddle
+        DownloadsItemTools {
+            id: downloadsItemTools
+            itemId: root.downloadId
+        }
+        text: qsTr("Unable to move: %1").arg(downloadsItemTools.hasChildDownloads ? downloadsItemTools.destinationPath : downloadsItemTools.tplPathAndTitle) + App.loc.emptyString
+        horizontalAlignment: Text.AlignLeft
+        font: uicore.buildFont({}, uicore.fontSizeV1(16*appWindow.fontZoom))
+    }
+
+    BaseDialogButtonsLayout
+    {
+        BaseDialogButton {
+            text: qsTr("Try again") + App.loc.emptyString
+            primary: true
+            onClicked: root.retryMoving()
         }
 
-        Label {
-            id: lbl
-            visible: downloadsItemTools.tplPathAndTitle.length > 0
-            Layout.fillWidth: true
-            elide: Text.ElideMiddle
-            color: "#737373"
-            DownloadsItemTools {
-                id: downloadsItemTools
-                itemId: root.downloadId
-            }
-            text: qsTr("Unable to move: %1").arg(downloadsItemTools.hasChildDownloads ? downloadsItemTools.destinationPath : downloadsItemTools.tplPathAndTitle) + App.loc.emptyString
-            horizontalAlignment: Text.AlignLeft
-        }
-
-        RowLayout {
-            Layout.topMargin: 10
-            Layout.bottomMargin: 10
-            Layout.alignment: Qt.AlignRight
-
-            spacing: 5
-
-            DialogButton {
-                text: qsTr("Try again") + App.loc.emptyString
-                onClicked: root.retryMoving()
-            }
-
-            DialogButton {
-                text: qsTr("Cancel") + App.loc.emptyString
-                onClicked: root.abortMoving()
-            }
+        BaseDialogButton {
+            text: qsTr("Cancel") + App.loc.emptyString
+            onClicked: root.abortMoving()
         }
     }
 

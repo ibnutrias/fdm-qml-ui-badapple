@@ -5,7 +5,7 @@ import org.freedownloadmanager.fdm
 import "../../common/Tools"
 import "../BaseElements"
 
-Dialog {
+CenteredDialog {
     id: root
 
     property var downloadIds: []
@@ -15,78 +15,60 @@ Dialog {
 
     parent: Overlay.overlay
 
-    x: Math.round((appWindow.width - width) / 2)
-    y: Math.round((appWindow.height - height) / 2)
-
     modal: true
 
-    width: Math.round(appWindow.width * 0.8)
+    BaseFontMetrics
+    {
+        id: fm
+    }
 
-    contentItem: ColumnLayout {
-        width: parent.width
+    title: (singleMode ? qsTr("This download can't be resumed after pausing") : qsTr("The download(s) below can't be resumed after pausing")) + App.loc.emptyString
 
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.bottomMargin: 20
-            height: title.height
-            color: "transparent"
+    ListView
+    {
+        id: listView
+        clip: true
+        implicitWidth: {
+            let r = 0;
+            for (let i = 0; i < root.downloadIds.length; ++i) {
+                r = Math.max(r, fm.advanceWidth(displayPath(root.downloadIds[i])));
+            }
+            return r + fm.font.pixelSize*fm.font.pointSize*0;
+        }
+        Layout.fillWidth: true
+        Layout.maximumWidth: root.ctMaxWidth
+        Layout.preferredHeight: Math.min(contentHeight, 150)
+        ScrollBar.vertical: ScrollBar {
+            active: parent.contentHeight > 150
+        }
+        model: root.downloadIds
+        delegate: BaseLabel {
+            width: parent.width
+            elide: Text.ElideMiddle
+            color: appWindow.uiver === 1 ?
+                       "#737373" :
+                       appWindow.theme_v2.textColor2
+            text: displayPath(root.downloadIds[index])
+        }
+    }
 
-            BaseLabel {
-                id: title
-                adaptive: true
-                labelSize: adaptiveTools.labelSize.highSize
-                text: (singleMode ? qsTr("This download can't be resumed after pausing") : qsTr("The download(s) below can't be resumed after pausing")) + App.loc.emptyString
-                wrapMode: Label.Wrap
-                font.weight: Font.Bold
-                width: parent.width
+    BaseDialogButtonsLayout
+    {
+        BaseDialogButton
+        {
+            text: qsTr("Pause") + App.loc.emptyString
+            primary: true
+            onClicked: {
+                selectedDownloadsTools.stopByIds(downloadIds);
+                root.close();
+                downloadsRemoved();
             }
         }
 
-        ListView {
-            id: listView
-            clip: true
-            Layout.fillWidth: true
-            Layout.preferredHeight: Math.min(contentHeight, 150)
-            ScrollBar.vertical: ScrollBar {
-                active: parent.contentHeight > 150
-            }
-            model: root.downloadIds
-            delegate: Rectangle {
-                width: parent.width
-                height: lbl.height
-                color: 'transparent'
-
-                BaseLabel {
-                    id: lbl
-                    visible: downloadsItemTools.tplPathAndTitle.length > 0
-                    width: parent.width
-                    elide: Text.ElideMiddle
-                    color: "#737373"
-                    DownloadsItemTools {
-                        id: downloadsItemTools
-                        itemId: root.downloadIds[index]
-                    }
-                    text: downloadsItemTools.hasChildDownloads ? downloadsItemTools.destinationPath : downloadsItemTools.tplPathAndTitle
-                }
-            }
-        }
-
-        RowLayout {
-            DialogButton
-            {
-                text: qsTr("Pause") + App.loc.emptyString
-                onClicked: {
-                    selectedDownloadsTools.stopByIds(downloadIds);
-                    root.close();
-                    downloadsRemoved();
-                }
-            }
-
-            DialogButton
-            {
-                text: qsTr("Cancel") + App.loc.emptyString
-                onClicked: root.close()
-            }
+        BaseDialogButton
+        {
+            text: qsTr("Cancel") + App.loc.emptyString
+            onClicked: root.close()
         }
     }
 
@@ -95,5 +77,14 @@ Dialog {
         console.log("show(ids)", ids);
         root.downloadIds = ids;
         root.open();
+    }
+
+    function displayPath(id) {
+        let info = App.downloads.infos.info(id);
+        if (!info)
+            return "";
+        return info.hasChildDownloads ?
+                    info.destinationPath :
+                    info.destinationPath + '/' + info.title;
     }
 }

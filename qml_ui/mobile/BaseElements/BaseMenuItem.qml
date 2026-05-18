@@ -1,45 +1,46 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Effects
+import "V2"
 
-MenuItem {
+MenuItem
+{
     id: menuItem
 
-    height: visible ? contentItem.implicitHeight + 2 : 0
+    property bool useEnabledLookAlways: false
+    property int xOffset: 0
 
-    indicator: Item {
-        implicitWidth: 30
-        implicitHeight: 30
+    implicitHeight: visible ?
+                        contentItem.implicitHeight + (appWindow.uiver === 1 ? 2 : 4*2)*appWindow.zoom :
+                        0
 
-        Image {
-            id: img
-            visible: menuItem.checkable && menuItem.checked
-            sourceSize.width: 16
-            sourceSize.height: 16
-            anchors.bottom: parent.bottom
-            anchors.left: parent.left
-            anchors.leftMargin: 5
-            anchors.bottomMargin: 7
-            source: Qt.resolvedUrl("../../images/mobile/check.svg")
-            layer {
-                effect: MultiEffect {
-                    colorization: 1.0
-                    colorizationColor: appWindow.theme.sortCheck
-                }
-                enabled: true
-            }
-        }
+    indicator: SvgImage_V2 {
+        id: img
+        visible: menuItem.checkable && menuItem.checked
+        sourceSize: appWindow.uiver === 1 ?
+                        Qt.size(16, 16) :
+                        Qt.size(width, height)
+        anchors.left: parent.left
+        anchors.leftMargin: 5*appWindow.zoom + xOffset
+        anchors.verticalCenter: parent.verticalCenter
+        source: Qt.resolvedUrl(appWindow.uiver === 1 ?
+                                   "../../images/mobile/check.svg" :
+                                   "V2/menu_checkmark.svg")
+        imageColor: appWindow.uiver === 1 ?
+                        appWindow.theme.sortCheck :
+                        appWindow.theme_v2.primary
     }
 
-    contentItem: Label {
+    contentItem: BaseLabel {
         text: menuItem.text
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
-        leftPadding: 10
-        font.pointSize: 16
-        color: appWindow.theme.foreground
-        opacity: menuItem.enabled ? 1 : 0.4
-        width: parent.width
+        leftPadding: qtbug.leftPadding(indicator.width - 4 + xOffset, 0)
+        rightPadding: qtbug.rightPadding(indicator.width - 4 + xOffset, 0)
+        font: uicore.buildFont({}, uicore.fontSizeV1(16)*appWindow.fontZoom)
         wrapMode: Text.WordWrap
+        opacity: useEnabledLookAlways ?
+                     1.0 :
+                     (enabled ? 1 : (appWindow.uiver === 1 ? 0.5 : appWindow.theme_v2.opacityDisabled))
     }
 }

@@ -7,67 +7,59 @@ import "BaseElements"
 import "../common/Tools"
 
 
-Menu
+BaseMenu
 {
     id: root
 
     property var modelIds: []
-    property bool finished
-    property bool hasPostFinishedTasks: false
-    property var downloadModel
     property bool downloadItemPage: false
-    property var priority: null
-    property bool priorityVisible: selectedDownloadsTools.changePriorityAllowed()
-    property bool fileIntegrityVisible: modelIds.length === 1 && root.finished === true && downloadModel.filesCount == 1
-    property bool canChangeUrl: modelIds.length === 1 && downloadModel && (downloadModel.flags & AbstractDownloadsUi.AllowChangeSourceUrl) != 0
-    property bool supportsMirror: modelIds.length === 1 && downloadModel && (downloadModel.flags & AbstractDownloadsUi.SupportsMirrors) != 0
-    property bool supportsSequentialDownload: selectedDownloadsTools.sequentialDownloadAllowed()
-    property bool supportsPlayAsap: selectedDownloadsTools.playAsapAllowed()
     property bool supportsDisablePostFinishedTasks: false
     property bool supportsAddT: false
     property bool supportsForceReann: false
     property bool supportsIgnoreURatioLimit: false
-    property bool endlessStream: modelIds.length === 1 && downloadModel && (downloadModel.flags & AbstractDownloadsUi.EndlessStream) != 0
-    property bool locked: selectedDownloadsTools.selectedDownloadsIsLocked()
     readonly property var info: modelIds.length === 1 ? App.downloads.infos.info(modelIds[0]) : null
     readonly property var error: info ? info.error : null
     readonly property bool showReportError: error && error.hasError
     readonly property bool showAllowAutoRetry: info && (showReportError || App.downloads.autoRetryMgr.isDownloadSetToAutoRetry(modelIds[0]))
+    property bool threeDotsMenu: false
+    property bool hideDisabledItems: threeDotsMenu
 
     modal: true
     dim: false
-    width: 260
 
-    //////////////////////////////////////////////////////////////////////
-    // QTBUG-139695 workaround
-    topMargin: appWindow.SafeArea.margins.top
-    leftMargin: appWindow.SafeArea.margins.left
-    bottomMargin: appWindow.SafeArea.margins.bottom
-    rightMargin: appWindow.SafeArea.margins.right
-    //////////////////////////////////////////////////////////////////////
+    DownloadsItemsTools {
+        id: tools
+        ids: modelIds
+    }
+
+    DownloadsItemTools {
+        id: singleItemTools
+        itemId: modelIds.length === 1 ? modelIds[0] : -1
+    }
 
     DownloadsItemContextMenuTools {
         id: contextMenuTools
         modelId: modelIds[0]
         singleDownload: modelIds.length === 1
-        finished: root.finished
+        finished: tools.finished
     }
 
     transformOrigin: Menu.TopRight
 
     BaseMenuItem {
+        id: finishDownloadingItem
+        visible: tools.canBeFinalized && (enabled || !hideDisabledItems)
         text: qsTr("Save and complete") + App.loc.emptyString
-        visible: endlessStream
-        enabled: !locked
-        onTriggered: selectedDownloadsTools.finalizeDownloads()
+        enabled: !tools.locked
+        onTriggered: tools.finalizeDownloads()
     }
-    BaseMenuSeparator {visible: endlessStream}
+    BaseMenuSeparator {visible: finishDownloadingItem.visible}
 
-    readonly property bool abortVisible: downloadsItemTools.performingLo && downloadsItemTools.loAbortable
+    readonly property bool abortVisible: singleItemTools.performingLo && singleItemTools.loAbortable
     BaseMenuItem {
         visible: abortVisible
         text: qsTr("Abort") + App.loc.emptyString
-        onTriggered: downloadsItemTools.abortLo()
+        onTriggered: singleItemTools.abortLo()
     }
     BaseMenuSeparator {
         visible: abortVisible
@@ -76,77 +68,70 @@ Menu
     ActionGroup {
         id: priorityGroup
     }
-    PriorityMenuItem {
-        visible: priorityVisible
+    BaseMenuItem {
+        visible: tools.canChangePriority
         text: qsTr("Set priority") + App.loc.emptyString
         enabled: false
+        useEnabledLookAlways: true
     }
-    PriorityMenuItem {
-        visible: priorityVisible
-        text: qsTr("High") + App.loc.emptyString
-        checkable: true
-        checked: selectedDownloadsTools.getDownloadsPriorityChecked(AbstractDownloadsUi.DownloadPriorityHigh)
-        onTriggered: selectedDownloadsTools.setDownloadsPriority(AbstractDownloadsUi.DownloadPriorityHigh)
-        ActionGroup.group: priorityGroup
-    }
-    PriorityMenuItem {
-        visible: priorityVisible
-        text: qsTr("Normal") + App.loc.emptyString
-        checkable: true
-        checked: selectedDownloadsTools.getDownloadsPriorityChecked(AbstractDownloadsUi.DownloadPriorityNormal)
-        onTriggered: selectedDownloadsTools.setDownloadsPriority(AbstractDownloadsUi.DownloadPriorityNormal)
-        ActionGroup.group: priorityGroup
-    }
-    PriorityMenuItem {
-        visible: priorityVisible
-        text: qsTr("Low") + App.loc.emptyString
-        checkable: true
-        checked: selectedDownloadsTools.getDownloadsPriorityChecked(AbstractDownloadsUi.DownloadPriorityLow)
-        onTriggered: selectedDownloadsTools.setDownloadsPriority(AbstractDownloadsUi.DownloadPriorityLow)
-        ActionGroup.group: priorityGroup
+    Repeater {
+        model: uicore.allPriorities
+        BaseMenuItem {
+            required property int modelData
+            visible: tools.canChangePriority
+            text: uicore.priorityText(modelData) + App.loc.emptyString
+            checkable: true
+            checked: (modelData === AbstractDownloadsUi.DownloadPriorityHigh && tools.highPriority) ||
+                     (modelData === AbstractDownloadsUi.DownloadPriorityNormal && tools.normalPriority) ||
+                     (modelData === AbstractDownloadsUi.DownloadPriorityLow && tools.lowPriority)
+            onTriggered: tools.setDownloadsPriority(modelData)
+            ActionGroup.group: priorityGroup
+            xOffset: 30*appWindow.zoom
+        }
     }
     BaseMenuSeparator {
-        visible: priorityVisible
+        visible: tools.canChangePriority
     }
 
-    readonly property bool restartVisible: selectedDownloadsTools.canBeRestarted()
     BaseMenuItem {
-        id: restart
+        id: restartItem
         text: qsTr("Restart") + App.loc.emptyString
-        visible: restartVisible
-        enabled: !locked
-        onTriggered: selectedDownloadsTools.restartDownloads()
+        visible: tools.canBeRestarted && (enabled || !hideDisabledItems)
+        enabled: !tools.locked
+        onTriggered: tools.restartDownloads()
     }
-    readonly property bool openVisible: !App.rc.client.active && contextMenuTools.canBeOpened
+
     BaseMenuItem {
-        id: open
+        id: openItem
         text: qsTr("Open") + App.loc.emptyString
-        visible: openVisible
-        enabled: !locked
+        visible: !App.rc.client.active && contextMenuTools.canBeOpened
+        enabled: !tools.locked
         onTriggered: contextMenuTools.openClick()
     }
-    readonly property bool showInFolderVisible: !App.rc.client.active &&
-                                                (modelIds.length === 1 && contextMenuTools.canBeShownInFolder)
+
     BaseMenuItem {
-        id: showInFolder
-        visible: showInFolderVisible
+        id: showInFolderItem
+        visible: !App.rc.client.active &&
+                 (modelIds.length === 1 && contextMenuTools.canBeShownInFolder)
         text: qsTr("Show in folder") + App.loc.emptyString
         onTriggered: contextMenuTools.showInFolderClick()
     }
+
     BaseMenuItem {
-        id: shareFile
+        id: shareFileItem
         visible: !App.rc.client.active && contextMenuTools.canShareFile
         text: qsTr("Share file") + App.loc.emptyString
         onTriggered: contextMenuTools.shareFileClick()
     }
+
     BaseMenuSeparator {
-        visible: restartVisible || openVisible || showInFolderVisible || shareFile.visible
+        visible: restartItem.visible || openItem.visible || showInFolderItem.visible || shareFileItem.visible
     }
 
     BaseMenuItem {
         visible: showReportError
         text: qsTr("Report problem") + App.loc.emptyString
-        enabled: !locked
+        enabled: !tools.locked
         onTriggered: contextMenuTools.reportProblem()
     }
     BaseMenuItem {
@@ -171,7 +156,7 @@ Menu
         text: qsTr("Show info") + App.loc.emptyString
         onTriggered: stackView.waPush(Qt.resolvedUrl("DownloadItemPage/Page.qml"), {downloadItemId: modelIds[0]});
     }
-    readonly property bool filesVisible: modelIds.length === 1 && !downloadItemPage && downloadModel.filesCount > 1
+    readonly property bool filesVisible: !downloadItemPage && info && info.filesCount > 1
     BaseMenuItem {
         visible: filesVisible
         text: qsTr("Files") + App.loc.emptyString
@@ -184,18 +169,18 @@ Menu
     BaseMenuItem {
         text: qsTr("Rename file") + App.loc.emptyString
         visible: info ? (info.finished && info.filesCount === 1) : false
-        enabled: !locked && selectedDownloadsTools.checkRenameAllowed()
+        enabled: !tools.locked && tools.canRename
         onTriggered: stackView.waPush(Qt.resolvedUrl("RenameDownloadFilePage.qml"), {downloadId:modelIds[0]})
     }
     BaseMenuItem {
         visible: !App.rc.client.active
         text: qsTr("Move to...") + App.loc.emptyString
-        enabled: !locked && selectedDownloadsTools.checkMoveAllowed()
+        enabled: !tools.locked && tools.canMove
         onTriggered: stackView.waPush(filePicker.filePickerPageComponent, {initiator: "fileMoving", downloadId: modelIds[0]});
     }
     BaseMenuItem {
         text: qsTr("Delete file") + App.loc.emptyString
-        enabled: !locked
+        enabled: !tools.locked
         onTriggered: {
             deleteDownloadsDialog.downloadIds = modelIds;
             deleteDownloadsDialog.open();
@@ -203,38 +188,42 @@ Menu
     }
     BaseMenuItem {
         text: qsTr("Remove from list") + App.loc.emptyString
-        enabled: !locked
-        onTriggered: selectedDownloadsTools.removeFromList(modelIds)
+        enabled: !tools.locked
+        onTriggered: selectedDownloadsTools.removeFromList(tools.ids)
     }
     BaseMenuSeparator {}
 
     BaseMenuItem {
         id: sequentialDownloadItem
-        visible: supportsSequentialDownload
-        enabled: !locked
+        visible: tools.supportsSequentialDownload && (enabled || !hideDisabledItems)
+        enabled: !tools.locked
         text: qsTr("Sequential download") + App.loc.emptyString
         checkable: true
-        checked: selectedDownloadsTools.sequentialDownloadChecked()
-        onTriggered: selectedDownloadsTools.setSequentialDownload(checked)
+        checked: tools.sequentialDownload
+        onTriggered: tools.setSequentialDownload(checked)
     }
     BaseMenuItem {
-        visible: supportsPlayAsap
-        enabled: !locked
+        id: playFileWhileDownloadingItem
+        visible: tools.supportsPlayAsap && (enabled || !hideDisabledItems)
+        enabled: !tools.locked
         text: qsTr("Play file while it is still downloading") + App.loc.emptyString
         checkable: true
-        checked: selectedDownloadsTools.playAsapChecked()
-        onTriggered: selectedDownloadsTools.setPlayAsap(checked)
+        checked: tools.playAsap
+        onTriggered: tools.setPlayAsap(checked)
     }
     BaseMenuItem {
+        id: addMirrorItem
+        visible: tools.ids.length === 1 && (tools.info.flags & AbstractDownloadsUi.SupportsMirrors) && (enabled || !hideDisabledItems)
         text: qsTr("Add mirror") + App.loc.emptyString
-        visible: supportsMirror
-        enabled: !locked
+        enabled: !tools.locked
         onTriggered: {
-            stackView.waPush(Qt.resolvedUrl("AddMirrorPage.qml"), {downloadModel:downloadModel})
+            stackView.waPush(Qt.resolvedUrl("AddMirrorPage.qml"), {downloadModel: info})
         }
     }
     BaseMenuSeparator {
-        visible: supportsSequentialDownload || supportsPlayAsap || supportsDisablePostFinishedTasks || supportsAddT || supportsIgnoreURatioLimit || supportsForceReann
+        visible: sequentialDownloadItem.visible || playFileWhileDownloadingItem.visible ||
+                 addMirrorItem.visible || supportsDisablePostFinishedTasks ||
+                 supportsAddT || supportsIgnoreURatioLimit || supportsForceReann
     }
 
     BaseMenuItem {
@@ -249,56 +238,60 @@ Menu
     }
     BaseMenuItem {
         text: qsTr("Check for update") + App.loc.emptyString
-        visible: selectedDownloadsTools.canCheckForUpdate()
-        onTriggered: selectedDownloadsTools.checkForUpdate()
+        visible: tools.canCheckForUpdate
+        onTriggered: tools.checkForUpdate()
     }
     BaseMenuSeparator {}
 
     BaseMenuItem {
+        id: changeUrlItem
+        visible: tools.ids.length === 1 &&
+                 (tools.info.flags & AbstractDownloadsUi.AllowChangeSourceUrl) &&
+                 (enabled || !hideDisabledItems)
+        enabled: !tools.locked
         text: qsTr("Change URL") + App.loc.emptyString
-        visible: canChangeUrl
-        enabled: !locked
         onTriggered: {
-            stackView.waPush(Qt.resolvedUrl("ChangeUrlPage.qml"), {downloadModel:downloadModel})
+            stackView.waPush(Qt.resolvedUrl("ChangeUrlPage.qml"), {downloadModel: info})
         }
     }
     BaseMenuSeparator {
-        visible: canChangeUrl
+        visible: changeUrlItem.visible
     }
 
     BaseMenuItem {
-        enabled: !locked && selectedDownloadsTools.convertationToMp3Allowed()
+        enabled: !tools.locked && tools.canConvertToMp3
         text: qsTr("Convert to mp3") + App.loc.emptyString
         onTriggered: {
-            stackView.waPush(Qt.resolvedUrl("Mp3ConverterPage.qml"), {downloadsIds: modelIds, filesIndices: []})
+            stackView.waPush(Qt.resolvedUrl("Mp3ConverterPage.qml"), {downloadsIds: tools.ids, filesIndices: []})
         }
     }
 
     BaseMenuItem {
-        enabled: !locked && selectedDownloadsTools.convertationToMp4Allowed()
+        enabled: !tools.locked && tools.canConvertToMp4
         text: qsTr("Convert to mp4") + App.loc.emptyString
         onTriggered: {
-            stackView.waPush(Qt.resolvedUrl("Mp4ConverterPage.qml"), {downloadsIds: modelIds, filesIndices: []})
+            stackView.waPush(Qt.resolvedUrl("Mp4ConverterPage.qml"), {downloadsIds: tools.ids, filesIndices: []})
         }
     }
     BaseMenuSeparator {}
 
     BaseMenuItem {
+        id: fileIntegrityItem
+        visible: tools.ids.length === 1 && tools.finished && tools.info.filesCount === 1 && (enabled || !hideDisabledItems)
         text: qsTr("File integrity") + App.loc.emptyString
-        visible: fileIntegrityVisible
-        enabled: !locked && !downloadModel.missingFiles && !downloadModel.missingStorage
+        enabled: !tools.locked && info && !info.missingFiles && !info.missingStorage
         onTriggered: {
-            stackView.waPush(Qt.resolvedUrl("FileIntegrityPage.qml"), {fileIndex: 0, downloadModel: downloadModel})
+            stackView.waPush(Qt.resolvedUrl("FileIntegrityPage.qml"), {fileIndex: 0, downloadModel: info})
         }
     }
     BaseMenuSeparator {
-        visible: fileIntegrityVisible
+        visible: fileIntegrityItem.visible
     }
 
     BaseMenuItem {
-        enabled: !locked && selectedDownloadsTools.setUpSchedulerAllowed()
+        enabled: !tools.locked && tools.canSchedule
         text: qsTr("Schedule") + App.loc.emptyString
-        onTriggered: schedulerDlg.setUpSchedulerAction(modelIds)
+        onTriggered: schedulerDlg.setUpSchedulerAction(tools.ids)
     }
 
     Component.onCompleted: {

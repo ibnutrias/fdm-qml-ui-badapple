@@ -6,6 +6,10 @@ import org.freedownloadmanager.fdm.abstractdownloadsui
 
 ToolbarFlatButton_V2
 {
+    //TODO: use AllDownloadsFilterModeButtonMenuHelper
+    //NOTE: Repeater will not be suitable here
+    // it will be required to write a MenuHelper (refactor TagsMenuHelper) so it can insert/remove menu items using a model
+
     title: missingFilesFilterItem.isActive ? missingFilesFilterItem.text :
            downloadsViewTools.downloadsTagFilter ? tagText(downloadsViewTools.downloadsTagFilter) + App.loc.emptyString :
            mode2name(App.downloads.model.downloadsStatesFilter) + App.loc.emptyString

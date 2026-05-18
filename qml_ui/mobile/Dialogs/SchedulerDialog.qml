@@ -6,104 +6,138 @@ import QtQuick.Controls.Material
 import "../../common/Tools"
 import "../../common"
 import "../BaseElements"
+import "../BaseElements/V2"
 import "../SettingsPage"
 
-CenteredDialog {
+CenteredDialog
+{
     id: root
 
     modal: true
 
     parent: Overlay.overlay
-    width: 310
-    height: parent.height < 550 ? parent.height - 60 : 470
-    padding: 0
 
-    onClosed: {
-        if (schedulerTools.tuneAndDownloadDialog) {
+    onClosed:
+    {
+        if (appWindow.uiver === 1)
+        {
+            if (schedulerTools.tuneAndDownloadDialog)
+                root.complete();
+        }
+        else
+        {
             root.complete();
+
+            if (!schedulerTools.tuneAndDownloadDialog)
+                schedulerTools.doOK();
         }
     }
 
-    contentItem: Flickable {
-        anchors.fill: parent
+    contentItem: Flickable
+    {
         flickableDirection: Flickable.VerticalFlick
         ScrollBar.vertical: ScrollBar { policy: parent.interactive ? ScrollBar.AlwaysOn : ScrollBar.AlwaysOff}
         boundsBehavior: Flickable.StopAtBounds
         contentHeight: content.height
         clip: true
         interactive: root.parent.height < 550
+        implicitHeight: contentHeight
+        implicitWidth: content.implicitWidth
 
-        ColumnLayout {
+        ColumnLayout
+        {
             id: content
             width: parent.width
-            spacing: 10
+            spacing: (appWindow.uiver === 1 ? 10 : 16)*appWindow.zoom
 
-            Item {
+            SwitchSetting {
+                id: enableScheduler
+                textMargins: 0
+                textHeighIncrement: 10
+                textFontSize: (appWindow.uiver === 1 ? 18 : appWindow.theme_v2.fontSize)*appWindow.fontZoom
+                settingsPageStyle: false
+                description: qsTr("Scheduler") + App.loc.emptyString
+                switchChecked: schedulerTools.schedulerCheckboxEnabled
+                onClicked: schedulerTools.onSchedulerCheckboxChanged(!switchChecked)
                 Layout.fillWidth: true
-                Layout.topMargin: 20
-                Layout.leftMargin: 20
-                Layout.rightMargin: 20
-                Layout.preferredHeight: enableScheduler.height
-
-                SwitchSetting {
-                    id: enableScheduler
-                    textMargins: 0
-                    textHeighIncrement: 10
-                    textFontSize: 18
-                    description: qsTr("Scheduler") + App.loc.emptyString
-                    switchChecked: schedulerTools.schedulerCheckboxEnabled
-                    enabled: true
-                    onClicked: schedulerTools.onSchedulerCheckboxChanged(!switchChecked)
-                }
+                anchors.left: undefined
+                anchors.right: undefined
             }
 
-            Label {
+            BaseLabel {
                 id: enableSchedulerText
                 text: qsTr("Start and pause downloads at specified time") + App.loc.emptyString
                 Layout.fillWidth: true
-                Layout.leftMargin: 20
-                Layout.rightMargin: 20
                 wrapMode: Text.WordWrap
-                font.pixelSize: 12
+                font: uicore.buildFont({}, (appWindow.uiver === 1 ? 12 : (appWindow.theme_v2.fontSize-1))*appWindow.fontZoom)
                 horizontalAlignment: Text.AlignLeft
             }
 
-            Item {
+            ColumnLayout
+            {
+                id: scheduler
+
                 enabled: schedulerTools.schedulerCheckboxEnabled
-                width: parent.width
-                height: scheduler.height
 
-                ColumnLayout {
-                    id: scheduler
-                    width: parent.width
+                Layout.fillWidth: true
 
-                    Rectangle {
-                        width: parent.width
-                        height: 1
-                        color: appWindow.theme.border
-                        Layout.topMargin: 10
-                        Layout.bottomMargin: 10
+                spacing: parent.spacing
+
+                BaseCheckBox
+                {
+                    id: wholeDayCb
+                    visible: appWindow.uiver !== 1
+                    text: qsTr("All the day") + App.loc.emptyString
+                    checked: isWholeDay()
+                    onClicked:
+                    {
+                        if (checked)
+                        {
+                            timeFrom.setTime({hour: 0, minute: 0})
+                            timeTo.setTime({hour: 24, minute: 0})
+                        }
                     }
+                }
+
+                Rectangle {
+                    visible: appWindow.uiver === 1
+                    Layout.topMargin: 10*appWindow.zoom
+                    Layout.fillWidth: true
+                    implicitHeight: 1
+                    color: appWindow.theme.border
+                }
+
+                Rectangle
+                {
+                    implicitWidth: fromToTextRect.implicitWidth + 2*20*appWindow.zoom
+                    implicitHeight: fromToTextRect.implicitHeight + (appWindow.uiver === 1 ? 0 : 2*8*appWindow.zoom)
+                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignHCenter
+                    color: appWindow.uiver === 1 ? "transparent" : appWindow.theme_v2.bg200
 
                     //time
-                    RowLayout {
+                    RowLayout
+                    {
                         id: fromToTextRect
-                        width: parent.width
-                        Layout.leftMargin: 20
-                        Layout.rightMargin: 20
+                        enabled: appWindow.uiver === 1 || !wholeDayCb.checked
+                        anchors.centerIn: parent
                         spacing: 10
-                        Layout.alignment: Qt.AlignHCenter
 
                         TimePicker {
                             id: timeFrom
                             width: 100
                         }
 
-                        Image {
-                            id: img
-                            sourceSize.width: 20
-                            sourceSize.height: 8
-                            source: Qt.resolvedUrl("../../images/mobile/arrow.svg")
+                        SvgImage_V2
+                        {
+                            source: Qt.resolvedUrl(appWindow.uiver === 1 ?
+                                                       "../../images/mobile/arrow.svg" :
+                                                       "../BaseElements/V2/arrow_right.svg")
+                            sourceSize: appWindow.uiver === 1 ?
+                                            Qt.size(20, 8) :
+                                            Qt.size(width, height)
+                            applyImageColor: appWindow.uiver !== 1
+                            imageColor: appWindow.theme_v2.bg500
                             Layout.alignment: Qt.AlignVCenter
                             mirror: LayoutMirroring.enabled
                         }
@@ -113,87 +147,95 @@ CenteredDialog {
                             width: 100
                         }
                     }
+                }
 
-                    Label {
-                        text: qsTr("All the day") + App.loc.emptyString
-                        font.pixelSize: 14
-                        Layout.alignment: Qt.AlignHCenter
-                        color: (timeFrom.time.hour == 0 && timeFrom.time.minute == 0 && timeTo.time.hour == 24 && timeTo.time.minute == 00) ? appWindow.theme.schedulerLabelSelectedText : appWindow.theme.schedulerLabelText
-                        opacity: enabled ? 1 : 0.5
-                        MouseArea {
-                            anchors.fill: parent
-                            onClicked: {
-                                timeFrom.setTime({hour: 0, minute: 0})
-                                timeTo.setTime({hour: 24, minute: 00})
-                            }
+                BaseLabel
+                {
+                    visible: appWindow.uiver === 1
+                    text: qsTr("All the day") + App.loc.emptyString
+                    font: uicore.buildFont({}, (appWindow.uiver === 1 ? 14 : (appWindow.theme_v2.fontSize+1))*appWindow.fontZoom)
+                    Layout.alignment: Qt.AlignHCenter
+                    color: isWholeDay() ? appWindow.theme.schedulerLabelSelectedText : appWindow.theme.schedulerLabelText
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: {
+                            timeFrom.setTime({hour: 0, minute: 0})
+                            timeTo.setTime({hour: 24, minute: 00})
                         }
                     }
+                }
 
-                    Rectangle {
-                        width: parent.width
-                        height: 1
-                        color: appWindow.theme.border
-                        Layout.topMargin: 10
-                        Layout.bottomMargin: 10
+                Rectangle {
+                    visible: appWindow.uiver === 1
+                    Layout.fillWidth: true
+                    implicitHeight: 1
+                    color: appWindow.theme.border
+                }
+
+                BaseCheckBox
+                {
+                    id: everyDayCb
+                    visible: appWindow.uiver !== 1
+                    text: qsTr("Everyday") + App.loc.emptyString
+                    checked: daysGroup.checkState === Qt.Checked
+                    onClicked:
+                    {
+                        if (checked)
+                            setAllDaysChecked(true)
                     }
+                }
 
-                    ButtonGroup {
-                        id: daysGroup
-                        exclusive: false
+                ButtonGroup {
+                    id: daysGroup
+                    exclusive: false
+                }
+
+                ListView
+                {
+                    id: list
+                    orientation: ListView.Horizontal
+                    spacing: 16*appWindow.zoom
+                    Layout.fillWidth: true
+                    implicitWidth: contentItem.childrenRect.width
+                    implicitHeight: contentItem.childrenRect.height
+
+                    model: ListModel {}
+
+                    delegate: BaseCheckBox {
+                        text: day
+                        font: uicore.buildFont({capitalization: appWindow.uiver !== 1 ? Font.AllUppercase : Font.MixedCase},
+                                               (appWindow.uiver === 1 ? 14 : appWindow.theme_v2.fontSize)*appWindow.zoom)
+                        vertical: true
+                        checked: dayEnabled
+                        onClicked: setDayChecked(i, checked, index)
+                        ButtonGroup.group: daysGroup
                     }
+                }
 
-                    ListView {
-                        id: list
-                        orientation: ListView.Horizontal
-                        spacing: 0
-                        Layout.fillWidth: true
-                        Layout.leftMargin: 20
-                        Layout.rightMargin: 20
-                        Layout.preferredHeight: 60
-
-                        model: ListModel {}
-
-                        delegate: Rectangle {
-                            height: 70
-                            width: 38
-                            color: "transparent"
-                            BaseCheckBox {
-                                text: day
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                anchors.top: parent.top
-                                checkBoxStyle: "gray"
-                                size: 16
-                                vertical: true
-                                checked: dayEnabled
-                                onClicked: setDayChecked(i, checked, index)
-                                ButtonGroup.group: daysGroup
-                            }
-                        }
+                BaseLabel
+                {
+                    visible: appWindow.uiver === 1
+                    text: qsTr("Everyday") + App.loc.emptyString
+                    font: uicore.buildFont({}, (appWindow.uiver === 1 ? 14 : (appWindow.theme_v2.fontSize+1))*appWindow.fontZoom)
+                    Layout.alignment: Qt.AlignHCenter
+                    color: daysGroup.checkState === Qt.Checked ? appWindow.theme.schedulerLabelSelectedText : appWindow.theme.schedulerLabelText
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: setAllDaysChecked(true)
                     }
+                }
 
-                    Label {
-                        text: qsTr("Everyday") + App.loc.emptyString
-                        font.pixelSize: 14
-                        Layout.alignment: Qt.AlignHCenter
-                        color: daysGroup.checkState === Qt.Checked ? appWindow.theme.schedulerLabelSelectedText : appWindow.theme.schedulerLabelText
-                        opacity: enabled ? 1 : 0.5
-                        MouseArea {
-                            anchors.fill: parent
-                            onClicked: setAllDaysChecked(true)
-                        }
-                    }
-
-                    Rectangle {
-                        width: parent.width
-                        height: 1
-                        color: appWindow.theme.border
-                        Layout.topMargin: 10
-                        Layout.bottomMargin: 0
-                    }
+                Rectangle {
+                    visible: appWindow.uiver === 1
+                    Layout.fillWidth: true
+                    implicitHeight: 1
+                    color: appWindow.theme.border
                 }
             }
 
-            Button {
+            Button
+            {
+                visible: appWindow.uiver === 1
                 text: (schedulerTools.tuneAndDownloadDialog ? qsTr("Close") : qsTr("Apply")) + App.loc.emptyString
                 onClicked: {
                     if (schedulerTools.tuneAndDownloadDialog) {
@@ -204,17 +246,19 @@ CenteredDialog {
                     }
                 }
                 enabled: daysGroup.checkState !== Qt.Unchecked
-                Layout.leftMargin: 20
-                Layout.rightMargin: 20
-                Layout.topMargin: 0
-                Layout.bottomMargin: 20
                 Layout.fillWidth: true
-                font.pixelSize: 16
+                font.pixelSize: 16*appWindow.fontZoom
                 font.capitalization: Font.Capitalize
                 Material.background: appWindow.theme.toolbarBackground
                 Material.foreground: appWindow.theme.toolbarTextColor
             }
         }
+    }
+
+    function isWholeDay()
+    {
+        return timeFrom.time.hour === 0 && timeFrom.time.minute === 0 &&
+                timeTo.time.hour === 24 && timeTo.time.minute === 0;
     }
 
     function setUpSchedulerAction(ids)

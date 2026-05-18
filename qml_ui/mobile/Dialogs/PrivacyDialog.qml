@@ -12,47 +12,40 @@ CenteredDialog
 
     modal: true
 
+    parent: Overlay.overlay
+
     property int failedId
 
-    contentItem: ColumnLayout {
-        width: parent.width
-        spacing: 10
-        anchors.leftMargin: 20
-        anchors.rightMargin: 20
+    BaseLabel
+    {
+        text: qsTr("A bug report will be sent to the server and used to improve %1 performance. We do not collect your personal data and do not share data with third parties.").arg(App.shortDisplayName) + App.loc.emptyString
+        Layout.fillWidth: true
+        Layout.maximumWidth: Math.min(ctMaxWidth, 500*appWindow.zoom)
+        wrapMode: Label.WordWrap
+        horizontalAlignment: Text.AlignLeft
+        font: uicore.buildFont({}, uicore.fontSizeV1(16*appWindow.fontZoom))
+    }
 
-        Label
-        {
-            text: qsTr("A bug report will be sent to the server and used to improve %1 performance. We do not collect your personal data and do not share data with third parties.").arg(App.shortDisplayName) + App.loc.emptyString
-            Layout.fillWidth: true
-            Layout.maximumWidth: Math.min(400, appWindow.width*0.9-40)
-            wrapMode: Label.WordWrap
-            horizontalAlignment: Text.AlignLeft
+    BaseCheckBox {
+        id: agree
+        text: qsTr("I agree (do not show it again)") + App.loc.emptyString
+        Layout.fillWidth: true
+        Layout.maximumWidth: ctMaxWidth
+        wrapMode: Text.WordWrap
+    }
+
+    BaseDialogButtonsLayout 
+    {
+        BaseDialogButton {
+            text: qsTr("Send report") + App.loc.emptyString
+            primary: true
+            onClicked: root.accept()
+            enabled: agree.checked
         }
 
-        BaseCheckBox {
-            id: agree
-            text: qsTr("I agree (do not show it again)") + App.loc.emptyString
-        }
-
-        RowLayout {
-            Layout.topMargin: 10
-            Layout.bottomMargin: 10
-            Layout.alignment: Qt.AlignRight
-
-            spacing: 5
-
-            DialogButton {
-                text: qsTr("Send report") + App.loc.emptyString
-                onClicked: root.accept()
-                Layout.alignment: Qt.AlignHCenter
-                enabled: agree.checked
-            }
-
-            DialogButton {
-                text: qsTr("Cancel") + App.loc.emptyString
-                onClicked: root.reject()
-                Layout.alignment: Qt.AlignHCenter
-            }
+        BaseDialogButton {
+            text: qsTr("Cancel") + App.loc.emptyString
+            onClicked: root.reject()
         }
     }
 

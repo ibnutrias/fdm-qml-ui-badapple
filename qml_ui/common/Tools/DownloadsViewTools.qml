@@ -22,16 +22,22 @@ Item {
 
     signal filterChanged()
 
-    function setDownloadsTitleFilter(search_str)
+    function setDownloadsTitleFilter(search_str, applyImmediately)
     {
         lastTmpDownloadsTitleFilter = search_str;
-        changedTimer.restart();
+        if (applyImmediately)
+            changedTimer.apply();
+        else
+            changedTimer.restart();
     }
 
-    function resetDownloadsTitleFilter()
+    function resetDownloadsTitleFilter(applyImmediately)
     {
         lastTmpDownloadsTitleFilter = "";
-        changedTimer.restart();
+        if (applyImmediately)
+            changedTimer.apply();
+        else
+            changedTimer.restart();
     }
 
     function setDownloadsStatesFilter(value)
@@ -119,7 +125,8 @@ Item {
         interval: 100;
         running: false;
         repeat: false
-        onTriggered: {
+        onTriggered: apply()
+        function apply() {
             App.downloads.model.downloadsTitleFilter = lastTmpDownloadsTitleFilter;
             downloadsTitleFilter = lastTmpDownloadsTitleFilter;
         }

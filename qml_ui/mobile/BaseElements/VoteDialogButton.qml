@@ -15,7 +15,7 @@ Button {
     contentItem: Text {
         text: control.text
         font.capitalization: Font.MixedCase
-        font.pixelSize: 14
+        font.pixelSize: 14*appWindow.fontZoom
         font.weight: yesBtn ? Font.Normal : Font.Light
         opacity: enabled ? 1.0 : 0.3
         color: control.down ? textColor : textColor

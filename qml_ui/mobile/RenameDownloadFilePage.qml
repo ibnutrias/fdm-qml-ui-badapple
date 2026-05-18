@@ -4,14 +4,21 @@ import QtQuick.Layouts
 import QtQuick.Controls.Material
 import org.freedownloadmanager.fdm
 import "BaseElements"
+import "BaseElements/V2"
 import "../common/Tools"
 
-Page
+BasePage
 {
     id: root
 
     property double downloadId: 0
     property int fileIndex: 0
+
+    title: qsTr("Rename file") + App.loc.emptyString
+
+    v1_okButtonVisible: true
+    v1_okButtonEnabled: !tools.renaming && (tools.canBeRenamed || !tools.hasChanges)
+    onV1_okButtonClicked: tools.doOK()
 
     RenameDownloadFileTools {
         id: tools
@@ -24,66 +31,46 @@ Page
         newNameField.forceActiveFocus();
     }
 
-    header: Column
+    BasePageLabel {
+        text: qsTr("Enter new name") + ':' + App.loc.emptyString
+    }
+
+    BaseTextField {
+        id: newNameField
+        selectByMouse: true
+        inputMethodHints: Qt.ImhNoAutoUppercase | Qt.ImhNoPredictiveText | Qt.ImhSensitiveData
+        focus: true
+        Layout.fillWidth: true
+    }
+
+    BaseLabel
     {
-        BaseToolBar {
-            RowLayout {
-                anchors.fill: parent
-
-                ToolbarBackButton {
-                    onClicked: stackView.pop()
-                }
-
-                ToolbarLabel {
-                    text: qsTr("Rename file") + App.loc.emptyString
-                    Layout.fillWidth: true
-                }
-
-                DialogButton {
-                    text: qsTr("OK") + App.loc.emptyString
-                    Layout.rightMargin: qtbug.rightMargin(0, 10)
-                    Layout.leftMargin: qtbug.leftMargin(0, 10)
-                    textColor: appWindow.theme.toolbarTextColor
-                    enabled: !tools.renaming && (tools.canBeRenamed || !tools.hasChanges)
-                    onClicked: tools.doOK()
-                }
-            }
-        }
-
-        ToolBarShadow {}
+        visible: tools.alreadyExistsError
+        text: qsTr("A file with that name already exists.") + App.loc.emptyString
+        color: appWindow.uiver === 1 ?
+                   appWindow.theme.errorMessage :
+                   appWindow.theme_v2.danger
     }
 
-    ColumnLayout {
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.margins: 20
-        spacing: 2
-
-        BaseLabel {
-            Layout.topMargin: 20
-            text: qsTr("Enter new name") + ':' + App.loc.emptyString
-        }
-
-        BaseTextField {
-            id: newNameField
-            selectByMouse: true
-            inputMethodHints: Qt.ImhNoAutoUppercase | Qt.ImhNoPredictiveText | Qt.ImhSensitiveData
-            focus: true
-            Layout.fillWidth: true
-        }
-
-        BaseLabel
-        {
-            visible: tools.alreadyExistsError
-            text: qsTr("A file with that name already exists.") + App.loc.emptyString
-            color: appWindow.theme.errorMessage
-        }
-
-        BaseLabel
-        {
-            visible: tools.error
-            text: tools.error
-            color: appWindow.theme.errorMessage
-        }
+    BaseLabel
+    {
+        visible: tools.error
+        text: tools.error
+        color: appWindow.uiver === 1 ?
+                   appWindow.theme.errorMessage :
+                   appWindow.theme_v2.danger
     }
+
+    DialogFlatButton_V2
+    {
+        visible: appWindow.uiver !== 1
+        text: qsTr("OK") + App.loc.emptyString
+        enabled: v1_okButtonEnabled
+        primary: true
+        onClicked: tools.doOK()
+        Layout.fillWidth: true
+        Layout.minimumHeight: 40*appWindow.zoom
+    }
+
+    Item {Layout.fillHeight: true}
 }

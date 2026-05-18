@@ -7,7 +7,6 @@ import org.freedownloadmanager.fdm
 Rectangle {
     id: root
 
-    anchors.fill: parent
     color: "transparent"
 
     property int hostColWidth: 150
@@ -16,8 +15,6 @@ Rectangle {
 
     Rectangle {
         anchors.fill: parent
-        anchors.leftMargin: appWindow.showBordersInDownloadsList ? parent.width * 0.1 : 0
-        anchors.rightMargin: appWindow.showBordersInDownloadsList ? parent.width * 0.1 : 0
         color: "transparent"
 
         border.color: appWindow.theme.border
@@ -26,7 +23,7 @@ Rectangle {
             text: qsTr("There are no connections") + App.loc.emptyString
             anchors.centerIn: parent
             visible: !connectionsList.visible
-            font.pixelSize: 13
+            font: uicore.buildFont({}, 13*appWindow.fontZoom)
         }
 
         ListView {

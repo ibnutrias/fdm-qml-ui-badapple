@@ -11,94 +11,89 @@ CenteredDialog
 
     focus: true
 
+    parent: Overlay.overlay
+
     readonly property string remoteId: idField.text.trim()
-    readonly property int maxWidth: Math.round(appWindow.width * 0.9) - 40
 
     modal: true
 
     title: qsTr("Connect to remote %1").arg(App.shortDisplayName) + App.loc.emptyString
 
-    width: maxWidth + 40
+    BaseLabel {
+        text: qsTr("Here you can connect to %1 running on your Windows/macOS/Linux PC").arg(App.shortDisplayName) + App.loc.emptyString
+        Layout.maximumWidth: root.ctMaxWidth
+        Layout.fillWidth: true
+        wrapMode: Text.WordWrap
+        font: uicore.buildFont({}, uicore.fontSizeV1(16*appWindow.fontZoom))
+    }
 
-    contentItem: ColumnLayout {
+    BaseLabel {
+        text: qsTr("Please enter %1, or <a href='#'>scan QR code</a>").arg("ID") + App.loc.emptyString
+        Layout.maximumWidth: root.ctMaxWidth
+        Layout.fillWidth: true
+        wrapMode: Text.WordWrap
+        onLinkActivated: App.scanQrCodeWithAppUrlCall()
+        font: uicore.buildFont({}, uicore.fontSizeV1(16*appWindow.fontZoom))
+    }
 
-        spacing: 10
+    BaseLabel {
+        text: qsTr("Both %1 and QR code are located inside of Preferences page of %2 you're going to connect to.").arg("ID").arg(App.shortDisplayName) + App.loc.emptyString
+        Layout.maximumWidth: root.ctMaxWidth
+        Layout.fillWidth: true
+        wrapMode: Text.WordWrap
+        font: uicore.buildFont({}, uicore.fontSizeV1(16*appWindow.fontZoom))
+    }
+
+    RowLayout {
+        spacing: parent.spacing
+
+        Layout.maximumWidth: root.ctMaxWidth
+        Layout.fillWidth: true
 
         BaseLabel {
-            text: qsTr("Here you can connect to %1 running on your Windows/macOS/Linux PC").arg(App.shortDisplayName) + App.loc.emptyString
-            Layout.maximumWidth: root.maxWidth
-            //Layout.preferredHeight: 40 // QTBUG-66826 workaround
-            wrapMode: Text.WordWrap
+            text: "ID:"
+            horizontalAlignment: Text.AlignLeft
+            font: uicore.buildFont({}, uicore.fontSizeV1(16*appWindow.fontZoom))
         }
 
-        BaseLabel {
-            text: qsTr("Please enter %1, or <a href='#'>scan QR code</a>").arg("ID") + App.loc.emptyString
-            Layout.preferredWidth: root.maxWidth
-            //Layout.preferredHeight: 40 // QTBUG-66826 workaround
-            wrapMode: Text.WordWrap
-            onLinkActivated: App.scanQrCodeWithAppUrlCall()
-        }
+        BaseTextField {
+            id: idField
+            text: uiSettingsTools.settings.lastRemoteAppId
+            focus: true
+            Layout.fillWidth: true
 
-        BaseLabel {
-            text: qsTr("Both %1 and QR code are located inside of Preferences page of %2 you're going to connect to.").arg("ID").arg(App.shortDisplayName) + App.loc.emptyString
-            Layout.preferredWidth: root.maxWidth
-            //Layout.preferredHeight: 40 // QTBUG-66826 workaround
-            wrapMode: Text.WordWrap
-        }
-
-        RowLayout {
-            spacing: 10
-
-            Layout.maximumWidth: root.maxWidth
-
-            Label {
-                text: "ID:"
-                horizontalAlignment: Text.AlignLeft
-            }
-
-            BaseTextField {
-                id: idField
-                text: uiSettingsTools.settings.lastRemoteAppId
-                focus: true
-                Layout.fillWidth: true
-                enable_QTBUG_110471_workaround_2: true
-                selectAllAtInit: true
-                onAccepted: root.accept()
-                Keys.onEscapePressed: root.close()
-                inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhSensitiveData
-                onTextChanged: {
-                    var s = text.toUpperCase();
-                    if (text != s)
-                        text = s;
-                }
+            enable_QTBUG_110471_workaround_2: true
+            selectAllAtInit: true
+            onAccepted: root.accept()
+            Keys.onEscapePressed: root.close()
+            inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhSensitiveData
+            onTextChanged: {
+                var s = text.toUpperCase();
+                if (text != s)
+                    text = s;
             }
         }
+    }
 
-        BaseCheckBox {
-            id: alwaysConnectOnAppStart
-            text: qsTr("Automatically connect at %1 startup").arg(App.shortDisplayName) + App.loc.emptyString
-            Layout.preferredWidth: root.maxWidth
-            //Layout.preferredHeight: 40 // QTBUG-66826 workaround
-            wrapMode: Text.WordWrap
+    BaseCheckBox {
+        id: alwaysConnectOnAppStart
+        text: qsTr("Automatically connect at %1 startup").arg(App.shortDisplayName) + App.loc.emptyString
+        Layout.maximumWidth: root.ctMaxWidth
+        wrapMode: Text.WordWrap
+    }
+
+    BaseDialogButtonsLayout
+    {
+        BaseDialogButton {
+            text: qsTr("Cancel") + App.loc.emptyString
+            onClicked: root.close()
         }
 
-        RowLayout {
-            Layout.topMargin: 10
-            Layout.bottomMargin: 10
-            Layout.alignment: Qt.AlignRight
-
-            spacing: 5
-
-            DialogButton {
-                text: qsTr("Cancel") + App.loc.emptyString
-                onClicked: root.close()
-            }
-
-            DialogButton {
-                enabled: root.remoteId !== '' && root.remoteId !== App.rc.id
-                text: qsTr("OK") + App.loc.emptyString
-                onClicked: root.accept()
-            }
+        BaseDialogButton {
+            enabled: root.remoteId !== '' && root.remoteId !== App.rc.id
+            text: qsTr("OK") + App.loc.emptyString
+            primary: true
+            onClicked: root.accept()
         }
     }
 

@@ -2,32 +2,22 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import org.freedownloadmanager.fdm
-import QtQuick.Controls.Material
 import "../../common"
 import "../BaseElements"
+import "../Dialogs"
 
-CenteredDialog
+AppMessageDialog
 {
     id: root
 
-    width: Math.min(Math.round(Overlay.overlay.width * 0.8), 300)
-
-    property string message: ""
+    parent: Overlay.overlay
 
     modal: true
 
     title: qsTr("Are you sure you want to quit?") + App.loc.emptyString
 
-    Label
-    {
-        text: root.message
-        wrapMode: Label.WordWrap
-        width: root.width-40
-        horizontalAlignment: Text.AlignLeft
-    }
+    hasCancelButton: true
 
-    standardButtons: Dialog.Ok | Dialog.Cancel
-
-    onAccepted: App.reportQuitConfirmationResult(true);
-    onRejected: App.reportQuitConfirmationResult(false);
+    onOkClicked: App.reportQuitConfirmationResult(true);
+    onCancelClicked: App.reportQuitConfirmationResult(false);
 }

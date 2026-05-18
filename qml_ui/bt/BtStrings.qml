@@ -14,6 +14,8 @@ Item {
     property string uploaded: qsTr("Uploaded") + App.loc.emptyString
     property string ratio: qsTr("Ratio") + App.loc.emptyString
 
+    readonly property string stopSAtRatio: App.my_BT_qsTranslate("SettingsPage", "Stop seeding at ratio") + App.loc.emptyString
+
     function speedHoverText(bytesUploaded, ratioText)
     {
         return uploaded + ": " + App.bytesAsText(bytesUploaded)

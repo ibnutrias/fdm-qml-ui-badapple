@@ -21,13 +21,12 @@ ApplicationWindow
 
     property bool mobileVersion: true
 
-    property int uiver: 1
+    property alias uiver: uiSettingsTools.uiVersion
 
     readonly property bool smallScreen: width < 500
     readonly property bool verySmallScreen: width < 400
 
     property real screenWidthInches: width / ( Screen.pixelDensity * 25.4 )
-    property bool showBordersInDownloadsList: false//width > 799 && appWindow.screenWidthInches > 4.5
 
     property bool showDownloadIcon: true
     property bool showDownloadCheckbox: false
@@ -36,7 +35,6 @@ ApplicationWindow
     property bool selectMode: false
     property bool searchMode: false
     property bool btSupported: App.features.hasFeature(AppFeatures.BT)
-    property bool ytSupported: App.features.hasFeature(AppFeatures.YT)
     property bool hasDownloadMgr: App.features.hasFeature(AppFeatures.LocalDownloadManager) || App.rc.client.active
     property alias btS: btStrings.item
 
@@ -56,12 +54,12 @@ ApplicationWindow
     visible: true
     width: 360
     height: 640
-//    visibility: Window.FullScreen
+
     title: App.displayName
 
-    flags: flags | Qt.ExpandedClientAreaHint
-
-    readonly property double fontZoom: 1.0
+    readonly property double zoom: appWindow.uiver === 1 ? 1.0 : uiSettingsTools.zoom
+    readonly property double zoom2: appWindow.uiver === 1 ? 1.0 : uiSettingsTools.zoom2
+    readonly property double fontZoom: zoom*zoom2
 
     SystemPalette {id: sp; colorGroup: SystemPalette.Active}
     readonly property bool isSystemPaletteLight: sp.text.r < 0.2 && sp.text.g < 0.2 && sp.text.b < 0.2
@@ -75,11 +73,15 @@ ApplicationWindow
     LightTheme {id: lightTheme}
     readonly property var theme: useDarkTheme ? darkTheme : lightTheme
 
+    property var theme_v2: Theme_V2 {isLightTheme: !appWindow.useDarkTheme}
+
     Material.theme: Material.Light
-    Material.background: theme.background
-    Material.primary: theme.primary
-    Material.foreground: theme.foreground
-    Material.accent: theme.accent
+    Material.background: uiver === 1 ? theme.background : theme_v2.bgColor
+    Material.primary: uiver === 1 ? theme.primary : theme_v2.primary
+    Material.foreground: uiver === 1 ? theme.foreground : theme_v2.textColor
+    Material.accent: uiver === 1 ? theme.accent : theme_v2.primary
+
+    Text {id: defaultText; visible: false}
 
     onOpenBrowser: App.launchBuiltInWebBrowser()
 
@@ -94,26 +96,27 @@ ApplicationWindow
     }
 
     background: Rectangle {
-        color: theme.primary
+        color: appWindow.uiver === 1 ?
+                   theme.primary :
+                   (uicore.snailTools.isSnail ?
+                        appWindow.theme_v2.appTitleBgColorInSnailMode :
+                        theme_v2.appTitleBgColor)
         anchors.fill: parent
     }
+
+    property bool forceShowDonateUi: false
+
+    footer: MainWindowFooter {}
 
     WaStackView {
         id: stackView
         anchors.fill: parent
-        // Qt 6.9.2+ does not require this
-        /*anchors.leftMargin: App.systemWindowInsets ? App.systemWindowInsets.left / Screen.devicePixelRatio : 0
-        anchors.topMargin: App.systemWindowInsets ? App.systemWindowInsets.top / Screen.devicePixelRatio : 0
-        anchors.rightMargin: App.systemWindowInsets ? App.systemWindowInsets.right / Screen.devicePixelRatio : 0
-        anchors.bottomMargin: App.systemWindowInsets ? App.systemWindowInsets.bottom / Screen.devicePixelRatio : 0*/
         onCurrentItemChanged: appWindowStateChanged()
     }
 
     UiSettingsTools {
         id: uiSettingsTools
     }
-
-    //footer: MainStatusBar {}
 
     Loader {
         id: aboutDlg
@@ -185,7 +188,7 @@ ApplicationWindow
         anchors.centerIn: parent
         function open(message) {
             active = true;
-            item.message = message;
+            item.text = message;
             item.open();
         }
     }
@@ -195,7 +198,6 @@ ApplicationWindow
         id: reportSentDlg
         property string errorMessage
         text: (errorMessage.length > 0 ? qsTr("Sorry, the report hasn't been sent, an error occurred: %1").arg(errorMessage) : qsTr("The report has been sent. Thank you for your cooperation!")) + App.loc.emptyString
-        buttons: buttonOk
     }
 
     Connections
@@ -220,7 +222,7 @@ ApplicationWindow
         }
     }
 
-    onClosing: {
+    onClosing: (close) => {
         if(stackView.depth > 1) {
             stackView.pop();
             close.accepted = false;
@@ -309,8 +311,10 @@ ApplicationWindow
         id: tagsTools
     }
 
-    VoteBlock {
-        id: voteBlock
+    Loader {
+        active: uiver === 1
+        source: Qt.resolvedUrl("VoteBlock.qml")
+        anchors.fill: parent
     }
 
     function createDownloadDialog(uiNewDownloadRequest)
@@ -458,7 +462,7 @@ ApplicationWindow
 
     Connections {
         target: App.downloads.tracker
-        onRemoteResourceChanged: {
+        onRemoteResourceChanged: (id) => {
             if (!App.settings.toBool(App.settings.dmcore.value(DmCoreSettings.AutoRestartFinishedDownloadIfRemoteResourceChanged))) {
                 remoteResourceChangedDlg.open(id);
             }
@@ -547,16 +551,9 @@ ApplicationWindow
         }
     }
 
-    Loader {
-        id: bugReportDlg
-        active: App.features.hasFeature(AppFeatures.SubmitBugReport)
-        source: "Dialogs/SubmitBugReportDialog.qml"
-        anchors.centerIn: parent
-        property bool opened: active && item.opened
-        function open() {
-            active = true;
-            item.open();
-        }
+    function openSubmitBugReportUi()
+    {
+        stackView.waPush(Qt.resolvedUrl("SubmitBugReportPage.qml"))
     }
 
     Connections
@@ -575,6 +572,7 @@ ApplicationWindow
     }
 
     Component.onCompleted: {
+        flags |= Qt.ExpandedClientAreaHint;
         uiReadyTools.onReady(function()
         {
             let r = App.downloads.filesExistsActionsMgr.pendingRequest();
@@ -593,7 +591,9 @@ ApplicationWindow
         });
     }
 
-    SnailTools {id: snailTools}
+    UiCore {
+        id: uicore
+    }
 
     //////////////////////////////////////////////////////////////////////////////
     // QTBUG-139724 workaround
@@ -619,4 +619,81 @@ ApplicationWindow
         }
     }
     //////////////////////////////////////////////////////////////////////////////
+
+    Loader {
+        id: mainMenuDrawer
+        source: Qt.resolvedUrl(appWindow.uiver === 1 ? "LeftDrawer.qml" : "V2/MainMenu/MainMenuDrawer_V2.qml")
+    }
+
+    readonly property bool isDownloadsPageActive: stackView.depth === 1 &&
+                                                  stackView.currentItem &&
+                                                  stackView.currentItem.objectName === uicore.downloadsPageName
+    readonly property bool isDownloadsPageSearchModeActive: isDownloadsPageActive &&
+                                                  stackView.currentItem.isSearchModeActive
+    readonly property bool isSettingsPageActive: stackView.currentItem &&
+                                                 stackView.currentItem.objectName === uicore.settingsPageName
+
+    function openSettings()
+    {
+        if (!isSettingsPageActive)
+        {
+            if (!isDownloadsPageActive)
+            {
+                if (!openDownloadsPage())
+                    return false;
+            }
+
+            stackView.waPush(Qt.resolvedUrl("SettingsPage/SettingsPage.qml"))
+        }
+
+        return true;
+    }
+
+    function openDownloadsPage()
+    {
+        if (isSettingsPageActive && !stackView.currentItem.validateSettings())
+            return false;
+
+        if (!isDownloadsPageActive)
+        {
+            while (stackView.depth > 1)
+                stackView.pop();
+        }
+
+        if (isDownloadsPageSearchModeActive)
+            stackView.currentItem.closeSearchMode();
+
+
+        return isDownloadsPageActive;
+    }
+
+    function openDownloadsPageSearchMode()
+    {
+        if (!openDownloadsPage())
+            return false;
+
+        return stackView.currentItem.openSearchMode();
+    }
+
+    onActiveFocusItemChanged: {
+        if (activeFocusItem)
+        {
+            // A weird Qt bug workaround. It sets active focus to a hidden page
+            for (let i = 0; i < stackView.depth - 1; ++i)
+            {
+                let item = activeFocusItem;
+                let stackViewItem = stackView.get(i, StackView.DontLoad);
+                do
+                {
+                    if (stackViewItem === item)
+                    {
+                        stackView.currentItem.forceActiveFocus();
+                        return;
+                    }
+                    item = item.parent;
+                }
+                while (item);
+            }
+        }
+    }
 }

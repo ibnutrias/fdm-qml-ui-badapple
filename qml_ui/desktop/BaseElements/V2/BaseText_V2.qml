@@ -7,4 +7,5 @@ Text
     font.family: appWindow.theme_v2.fontFamily
     font.pixelSize: appWindow.theme_v2.fontSize*appWindow.fontZoom
     font.weight: appWindow.theme_v2.fontWeight
+    horizontalAlignment: Text.AlignLeft
 }

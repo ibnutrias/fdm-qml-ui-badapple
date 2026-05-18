@@ -1,44 +1,35 @@
 import QtQuick
 import "../BaseElements/V2"
+import "../../common/Core"
 import org.freedownloadmanager.fdm
 import org.freedownloadmanager.fdm.abstractdownloadsui 
 
 ToolbarFlatButton_V2
 {
-    readonly property bool shouldBeChecked: App.downloads.model.allCheckState == Qt.Checked ||
-                                            App.downloads.model.allCheckState == Qt.PartiallyChecked
+    property alias shouldBeChecked: helper.shouldBeChecked
 
     hasCheckBox: true
-    checked: shouldBeChecked
+    checked: helper.shouldBeChecked
+
+    AllDownloadsCheckBoxButtonMenuHelper{id: helper}
 
     dropDownMenu: BaseMenu_V2
     {
-        BaseMenuItem_V2 {
-            text: qsTr("All") + App.loc.emptyString
-            onClicked: App.downloads.model.checkAll(true)
-        }
-        BaseMenuItem_V2 {
-            text: qsTr("Downloads only") + App.loc.emptyString
-            onClicked: App.downloads.model.checkSome(AbstractDownloadsUi.FilterDownloading, true, true)
-        }
-        BaseMenuItem_V2 {
-            text: qsTr("Uploads only") + App.loc.emptyString
-            onClicked: App.downloads.model.checkSome(AbstractDownloadsUi.FilterUploading, true, true)
-        }
-        BaseMenuItem_V2 {
-            text: qsTr("Completed") + App.loc.emptyString
-            onClicked: App.downloads.model.checkSome(AbstractDownloadsUi.FilterFinished, true, true)
-        }
-        BaseMenuItem_V2 {
-            text: qsTr("Stopped") + App.loc.emptyString
-            onClicked: App.downloads.model.checkSome(AbstractDownloadsUi.FilterStopped, true, true)
+        Repeater {
+            model: helper.model
+
+            BaseMenuItem_V2
+            {
+                text: modelData.text
+                onClicked: modelData.action()
+            }
         }
     }
 
-    onCheckBoxClicked: App.downloads.model.checkAll(checked)
+    onCheckBoxClicked: helper.onCheckBoxClicked(checked)
 
     Connections {
         target: App.downloads.model
-        onAllCheckStateChanged: checked = shouldBeChecked
+        onAllCheckStateChanged: checked = helper.shouldBeChecked
     }
 }

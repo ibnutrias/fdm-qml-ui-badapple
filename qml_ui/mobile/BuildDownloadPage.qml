@@ -6,6 +6,7 @@ import QtQuick.Controls.Material
 import org.freedownloadmanager.fdm
 import "../common/Tools"
 import "BaseElements"
+import "BaseElements/V2"
 
 
 Page {
@@ -14,92 +15,81 @@ Page {
     property string pageName: "BuildDownloadPage"
     property var downloadRequest
 
-    header: BaseToolBar {
-        RowLayout {
-            anchors.fill: parent
+    readonly property bool showReportProblem: downloadTools.lastFailedRequestId !== -1 && (downloadTools.statusWarning || downloadTools.lastError) && downloadTools.allowedToReportLastError
 
-            ToolbarBackButton {
-                onClicked: downloadTools.doReject()
-            }
-
-            ToolbarLabel {
-                text: qsTr("Add download") + App.loc.emptyString
-                Layout.fillWidth: true
-            }
-
-            DialogButton {
-                text: (downloadTools.buildingDownload || downloadTools.buildingDownloadFinished ? qsTr("Download") : qsTr("OK")) + App.loc.emptyString
-                Layout.rightMargin: qtbug.rightMargin(0, 10)
-                Layout.leftMargin: qtbug.leftMargin(0, 10)
-                textColor: appWindow.theme.toolbarTextColor
-                enabled: url.text.length > 0 && (!downloadTools.failed() || downloadTools.canIgnoreError())
-                onClicked: url.accepted()
-            }
-        }
+    header: Loader
+    {
+        source: Qt.resolvedUrl(appWindow.uiver === 1 ?
+                                   "BuildDownloadPageHeader.qml" :
+                                   "V2/BuildDownloadPageHeader_V2.qml")
     }
 
-    Column {
-        anchors.fill: parent
-        anchors.margins: 20
-        anchors.leftMargin: appWindow.showBordersInDownloadsList ? parent.width * 0.1 : 20
-        anchors.rightMargin: appWindow.showBordersInDownloadsList ? parent.width * 0.1 : 20
-        spacing: 10
+    ColumnLayout
+    {
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: parent.top
 
-        ColumnLayout {
-            width: parent.width
+        anchors.margins: appWindow.uiver === 1 ? 14 : appWindow.theme_v2.mainContentMargins*appWindow.zoom
+
+        anchors.leftMargin: appWindow.uiver === 1 ?
+                                20 :
+                                appWindow.theme_v2.mainContentMargins*appWindow.zoom
+
+        anchors.rightMargin: appWindow.uiver === 1 ?
+                                 20 :
+                                 appWindow.theme_v2.mainContentMargins*appWindow.zoom
+
+        spacing: appWindow.uiver === 1 ? 10 : 16*appWindow.zoom
+
+        ColumnLayout
+        {
+            Layout.fillWidth: true
+
             spacing: 2
 
-            Label
+            BasePageLabel
             {
                 text: App.cfg.cdEnterUrlText + App.loc.emptyString
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+                font: uicore.buildFont({}, uicore.fontSizeV1(16*appWindow.fontZoom))
             }
 
-            RowLayout{
+            RowLayout
+            {
+                Layout.fillWidth: true
+
                 BaseTextField
                 {
                     id: url
                     Layout.fillWidth: true
+                    Layout.maximumHeight: 300*appWindow.fontZoom
                     selectByMouse: true
                     focus: true
                     text: downloadTools.urlText
                     onDisplayTextChanged: downloadTools.onUrlTextChanged(displayText)
                     enabled: !downloadTools.buildingDownload && !downloadTools.buildingDownloadFinished
-                    onAccepted: { if (downloadTools.urlCheck(url.displayText)) {downloadTools.doOK()}}
+                    onAccepted: downloadTools.doOK()
                     inputMethodHints: Qt.ImhNoAutoUppercase | Qt.ImhNoPredictiveText | Qt.ImhSensitiveData
                     wrapMode: TextInput.WrapAnywhere
                     horizontalAlignment: Label.AlignLeft
                 }
 
-                RoundButton {
+                DialogFlatButton
+                {
                     visible: App.cfg.cdShowOpenFileBtn
-                    radius: 40
-                    width: 40
-                    height: 40
-                    flat: true
                     onClicked: openFileDlg.open()
-                    Layout.alignment: Qt.AlignTop
-                    icon.source: Qt.resolvedUrl("../images/download-item/folder.svg")
-                    icon.color: appWindow.theme.foreground
-                    icon.width: 18
-                    icon.height: 18
-
-                    FileDialog
-                    {
-                        id: openFileDlg
-                        nameFilters: App.cfg.cdOpenFileDlgNameFilters ? App.cfg.cdOpenFileDlgNameFilters : ["*"]
-                        fileMode: FileDialog.OpenFile
-                        flags: FileDialog.ReadOnly
-                        onAccepted: {
-                            url.text = selectedFile;
-                            url.accepted();
-                        }
-                    }
+                    iconSource: Qt.resolvedUrl(appWindow.uiver === 1 ?
+                                                   "../images/download-item/folder.svg" :
+                                                   "V2/open_folder.svg")
                 }
             }
         }
 
-        RowLayout {
-            width: parent.width
+        RowLayout
+        {
+            Layout.fillWidth: true
             height: 40
 
             BusyIndicator
@@ -107,16 +97,21 @@ Page {
                 visible: downloadTools.buildingDownload
                 running: downloadTools.buildingDownload
                 Layout.alignment: Qt.AlignVCenter
+                Layout.preferredHeight: 30*appWindow.zoom
+                Layout.preferredWidth: 30*appWindow.zoom
             }
 
-            Label
+            BaseLabel
             {
                 visible: !downloadTools.lastError
                 text: downloadTools.statusText
-                color: downloadTools.statusWarning ? appWindow.theme.errorMessage : appWindow.theme.successMessage
+                color: appWindow.uiver === 1 ?
+                           (downloadTools.statusWarning ? appWindow.theme.errorMessage : appWindow.theme.successMessage) :
+                           (downloadTools.statusWarning ? appWindow.theme_v2.danger : appWindow.theme_v2.secondary)
                 Layout.alignment: Qt.AlignVCenter
                 Layout.fillWidth: true
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                font: uicore.buildFont({}, uicore.fontSizeV1(16*appWindow.fontZoom))
             }
 
             BaseErrorLabel
@@ -131,22 +126,49 @@ Page {
             }
         }
 
-        RoundButton {
+        DialogFlatButton
+        {
+            visible: showReportProblem
+
             text: qsTr("Report problem") + App.loc.emptyString
-            visible: downloadTools.lastFailedRequestId !== -1 && (downloadTools.statusWarning || downloadTools.lastError) && downloadTools.allowedToReportLastError
-            icon.source: Qt.resolvedUrl("../images/mobile/bug_report.svg")
-            icon.color: appWindow.theme.toolbarTextColor
-            icon.width: 14
-            icon.height: 14
-            Material.foreground: appWindow.theme.toolbarTextColor
-            Material.background: appWindow.theme.selectModeBarAndPlusBtn
-            leftPadding: 20
-            rightPadding: 20
-            height: 48
-            flat: true
-            font.capitalization: Font.MixedCase
-            anchors.horizontalCenter: parent.horizontalCenter
+
+            primary: true
+
+            iconSource: Qt.resolvedUrl(appWindow.uiver === 1 ?
+                                           "../images/mobile/bug_report.svg" :
+                                           "V2/bug_report.svg")
+            iconWidth: 14
+            iconHeight: iconWidth
+
+            Layout.minimumHeight: appWindow.uiver === 1 ? 48 : 40*appWindow.zoom
+            Layout.preferredWidth: appWindow.uiver === 1 ? implicitWidth + 10*2 : implicitWidth
+            Layout.fillWidth: appWindow.uiver !== 1
+
+            Layout.alignment: Qt.AlignHCenter
             onClicked: privacyDlg.open(downloadTools.lastFailedRequestId)
+        }
+
+        DialogFlatButton_V2
+        {
+            visible: appWindow.uiver !== 1 && (!showReportProblem || downloadTools.canIgnoreError())
+            text: qsTr("Download") + App.loc.emptyString
+            enabled: url.text.length > 0 && (!downloadTools.failed() || downloadTools.canIgnoreError())
+            primary: true
+            onClicked: url.accepted()
+            Layout.fillWidth: true
+            Layout.minimumHeight: 40*appWindow.zoom
+        }
+    }
+
+    FileDialog
+    {
+        id: openFileDlg
+        nameFilters: App.cfg.cdOpenFileDlgNameFilters ? App.cfg.cdOpenFileDlgNameFilters : ["*"]
+        fileMode: FileDialog.OpenFile
+        flags: FileDialog.ReadOnly
+        onAccepted: {
+            url.text = selectedFile;
+            url.accepted();
         }
     }
 
@@ -154,13 +176,20 @@ Page {
     {
         url.text = "";
         var text = App.clipboard.text;
-        urlTools.checkIfAcceptableUrl(text, function(acceptable, modulesUids, urlDescriptions, downloadsTypes){
-            if (acceptable) {
-                url.text = text;
-                url.selectAll();
+        if (text)
+        {
+            urlTools.checkIfAcceptableUrl(text, function(acceptable, modulesUids, urlDescriptions, downloadsTypes){
+                if (acceptable) {
+                    url.text = text;
+                    url.selectAll();
+                }
                 url.forceActiveFocus();
-            }
-        });
+            });
+        }
+        else
+        {
+            url.forceActiveFocus();
+        }
     }
 
     Component.onCompleted: {
@@ -182,15 +211,6 @@ Page {
         }
         onReject: {
             stackView.pop();
-        }
-
-        function urlCheck(url) {
-            if (!appWindow.ytSupported && App.isDownloadForbidden(url)) {
-                downloadTools.statusWarning = true;
-                downloadTools.statusText = qsTr("Downloading from this site is not allowed");
-                return false;
-            }
-            return true;
         }
     }
 

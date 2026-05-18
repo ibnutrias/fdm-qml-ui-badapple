@@ -6,6 +6,7 @@ import org.freedownloadmanager.fdm
 import org.freedownloadmanager.fdm.qtupdate
 import "../BaseElements"
 import "../BaseElements/V2"
+import "../../common/V2"
 
 Item {
     id: root
@@ -15,8 +16,8 @@ Item {
                                           (updateTools.state != QtUpdate.Failed ||
                                           (updateTools.state == QtUpdate.Finished && updateTools.updatesAvailable))
 
-    height: (needMoreSpace ? 112 : 100)*appWindow.zoom
-    width: (needMoreSpace ? 112 : 100)*appWindow.zoom + 200*appWindow.fontZoom
+    height: dlg.implicitHeight + 40*appWindow.zoom
+    width: dlg.implicitWidth + 40*appWindow.zoom
 
     property int arrowCenterX: width/2
 
@@ -75,17 +76,31 @@ Item {
 
     Rectangle {
         id: dlg
+
+        readonly property var ct: ct1.visible ? ct1 :
+                                  ct2.visible ? ct2 :
+                                  ct3.visible ? ct3 :
+                                  ct4.visible ? ct4 :
+                                  ct5
+
+        implicitWidth: ct.implicitWidth
+        implicitHeight: ct.implicitHeight
+
         width: parent.width
         height: parent.height
+
         x: -20*appWindow.zoom
         y: appWindow.uiver === 1 ? 5*appWindow.zoom : 0
+
         color: root.bgColor
         radius: (appWindow.uiver === 1 ? 5 : 16)*appWindow.zoom
         border.color: appWindow.uiver === 1 ? "transparent" : appWindow.theme_v2.bg400
         border.width: appWindow.uiver === 1 ? 0 : 1*appWindow.zoom
+
         clip: true
 
         ColumnLayout {
+            id: ct1
             visible: updateTools.stage == QtUpdate.CheckUpdates
             anchors.margins: (appWindow.uiver === 1 ? 10 :  16)*appWindow.zoom
             anchors.horizontalCenter: parent.horizontalCenter
@@ -112,6 +127,7 @@ Item {
                 indeterminate: updateTools.progress === -1
                 value: updateTools.progress
                 running: updateTools.state == QtUpdate.InProgress
+                zoom: appWindow.zoom
                 Layout.fillWidth: true
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignCenter
             }
@@ -187,6 +203,7 @@ Item {
         }
 
         ColumnLayout {
+            id: ct2
             visible: updateTools.stage == QtUpdate.DownloadUpdates
             anchors.margins: (appWindow.uiver === 1 ? 10 :  16)*appWindow.zoom
             anchors.horizontalCenter: parent.horizontalCenter
@@ -245,6 +262,7 @@ Item {
         }
 
         ColumnLayout {
+            id: ct3
             visible: updateTools.stage == QtUpdate.PostDownloadCheck
             anchors.margins: (appWindow.uiver === 1 ? 10 :  16)*appWindow.zoom
             anchors.horizontalCenter: parent.horizontalCenter
@@ -326,6 +344,7 @@ Item {
         }
 
         ColumnLayout {
+            id: ct4
             visible: updateTools.stage == QtUpdate.PreInstallCheck
             anchors.margins: (appWindow.uiver === 1 ? 10 :  16)*appWindow.zoom
             anchors.horizontalCenter: parent.horizontalCenter
@@ -377,6 +396,7 @@ Item {
         }
 
         ColumnLayout {
+            id: ct5
             visible: updateTools.stage == QtUpdate.InstallUpdates
             anchors.margins: (appWindow.uiver === 1 ? 10 :  16)*appWindow.zoom
             anchors.horizontalCenter: parent.horizontalCenter

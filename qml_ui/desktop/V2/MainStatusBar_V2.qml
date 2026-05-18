@@ -4,6 +4,7 @@ import QtQuick.Controls
 import QtQuick.Effects
 import "../BaseElements/V2"
 import "../../common"
+import "../../common/Core"
 import org.freedownloadmanager.fdm
 import org.freedownloadmanager.fdm.appsettings
 import org.freedownloadmanager.fdm.dmcoresettings
@@ -11,30 +12,12 @@ import org.freedownloadmanager.fdm.tum
 
 Item
 {
-    readonly property color tumColor: tumDisplayColor(App.settings.tum.currentMode)
-
-    function tumDisplayText(tum) {
-        switch (tum) {
-        case TrafficUsageMode.Low: return qsTr("Low");
-        case TrafficUsageMode.Medium: return qsTr("Medium");
-        case TrafficUsageMode.High: return qsTr("High");
-        default: return "";
-        }
-    }
-
-    function tumDisplayColor(tum) {
-        switch (tum) {
-        case TrafficUsageMode.Low: return appWindow.theme_v2.danger;
-        case TrafficUsageMode.Medium: return appWindow.theme_v2.amber;
-        case TrafficUsageMode.High: return appWindow.theme_v2.secondary;
-        default: return "transparent";
-        }
-    }
+    TumButtonHelper {id: helper}
 
     function tumParamsDisplayText(tum) {
         if (tum == TrafficUsageMode.High)
             return qsTr("Unlimited");
-        return "↑ %1 ↓ %2"
+        return "↓ %1 ↑ %2"
             .arg(App.speedAsText(App.settings.tum.value(tum, DmCoreSettings.MaxDownloadSpeed)))
             .arg(App.speedAsText(App.settings.tum.value(tum, DmCoreSettings.MaxUploadSpeed)))
     }
@@ -126,11 +109,11 @@ Item
                 Rectangle {
                     anchors.fill: parent
                     color: App.settings.tum.currentMode != TrafficUsageMode.High ?
-                               appWindow.theme_v2.opacityColor(tumColor, 0.1) :
+                               appWindow.theme_v2.opacityColor(helper.tumColor, 0.1) :
                                "transparent"
                     border.width: 1*appWindow.zoom
                     border.color: App.settings.tum.currentMode != TrafficUsageMode.High ?
-                                      tumColor :
+                                      helper.tumColor :
                                       appWindow.theme_v2.bg300
                     radius: 4*appWindow.zoom
                 }
@@ -186,7 +169,7 @@ Item
                                 implicitWidth: 16*appWindow.zoom
                                 implicitHeight: implicitWidth
                                 radius: 4*appWindow.zoom
-                                color: tumColor
+                                color: helper.tumColor
                                 SvgImage_V2 {
                                     imageColor: appWindow.theme_v2.bgColor
                                     source: Qt.resolvedUrl("trending_up.svg")
@@ -198,7 +181,7 @@ Item
                                 implicitWidth: childrenRect.width
                                 implicitHeight: 16*appWindow.zoom
                                 BaseText_V2 {
-                                    text: tumDisplayText(App.settings.tum.currentMode) + App.loc.emptyString
+                                    text: helper.tumDisplayText(App.settings.tum.currentMode) + App.loc.emptyString
                                     font.pixelSize: 12*appWindow.fontZoom
                                     font.capitalization: Font.AllUppercase
                                     anchors.verticalCenter: parent.verticalCenter
@@ -255,9 +238,9 @@ Item
                                             id: tumSelectorPopupItemText
                                             x: 12
                                             y: 8
-                                            text: tumDisplayText(modelData) +
+                                            text: helper.tumDisplayText(modelData) +
                                                   (tumSelectorPopupItemMa.containsMouse ? " (%1)".arg(tumParamsDisplayText(modelData)) : "")
-                                            color: tumDisplayColor(modelData)
+                                            color: helper.tumDisplayColor(modelData)
                                             font.capitalization: Font.AllUppercase
                                         }
                                         MouseAreaWithHand_V2 {

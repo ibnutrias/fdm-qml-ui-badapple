@@ -26,9 +26,12 @@ BaseToolBar {
     //Hamburger menu button
     ToolbarButton {
         id: hamburgerMenuBtn
+
         anchors.left: parent.left
         anchors.leftMargin: 11
         anchors.verticalCenter: parent.verticalCenter
+
+        focusPolicy: Qt.NoFocus
 
         icon.source: Qt.resolvedUrl("../images/mobile/burger.svg")
         onClicked: hamburgerClicked()
@@ -52,7 +55,7 @@ BaseToolBar {
                 id: shortAppName
                 text: App.displayName
                 anchors.horizontalCenter: parent.horizontalCenter
-                font.pixelSize: 14
+                font.pixelSize: 14*appWindow.fontZoom
                 font.family: "Roboto"
                 font.weight: Font.DemiBold
                 opacity: enabled ? 1 : 0.3
@@ -62,7 +65,7 @@ BaseToolBar {
                 visible: !appWindow.hasDownloadMgr
                 text: qsTr("remote control") + App.loc.emptyString
                 anchors.horizontalCenter: parent.horizontalCenter
-                font.pixelSize: 14
+                font.pixelSize: 14*appWindow.fontZoom
                 font.family: "Roboto"
                 font.weight: Font.DemiBold
                 opacity: enabled ? 1 : 0.3

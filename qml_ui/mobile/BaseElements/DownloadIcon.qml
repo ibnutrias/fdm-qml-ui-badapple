@@ -42,7 +42,7 @@ Rectangle {
         Label {
             text: downloadsItemTools.singleFileSuffix
             font.capitalization: Font.AllUppercase
-            font.pixelSize: 13
+            font.pixelSize: 13*appWindow.fontZoom
             font.weight: Font.DemiBold
             anchors.top: parent.top
             anchors.topMargin: 8

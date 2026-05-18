@@ -60,7 +60,6 @@ ApplicationWindow {
     property bool updateSupported: App.features.hasFeature(AppFeatures.Updates)
     property bool btSupported: App.features.hasFeature(AppFeatures.BT)
     property alias btS: btStrings.item
-    property bool ytSupported: App.features.hasFeature(AppFeatures.YT)
     property bool portableSupported: App.features.hasFeature(AppFeatures.CreatePortableVersion)
     property bool showIntegrationBanner: false
     property string integrationId: 'APPBTSETDEFTRCLIENT'

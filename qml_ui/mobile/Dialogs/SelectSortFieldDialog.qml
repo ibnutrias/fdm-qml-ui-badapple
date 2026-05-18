@@ -27,7 +27,7 @@ Drawer {
 
             Label {
                 text: qsTr("Sort") + App.loc.emptyString
-                font.pixelSize: 17
+                font.pixelSize: 17*appWindow.fontZoom
                 font.weight: Font.DemiBold
                 anchors.topMargin: 15
                 anchors.verticalCenter: parent.verticalCenter
@@ -56,7 +56,7 @@ Drawer {
             checked: sortTools.sortBy === modelData.sortBy
             width: sort.width
             height: 30
-            font.pixelSize: 14
+            font.pixelSize: 14*appWindow.fontZoom
             onClicked: sortTools.setSortBy(modelData.sortBy)
             padding: 0
 

@@ -7,7 +7,7 @@ import org.freedownloadmanager.fdm.dmcoresettings
 import org.freedownloadmanager.fdm.appconstants
 import "../BaseElements"
 
-Dialog {
+CenteredDialog {
     id: root
 
     property int downloadId
@@ -17,81 +17,72 @@ Dialog {
     property int timeout: AppConstants.FileExistsActionTimeout
     property int countdown: root.timeout
 
-    readonly property int availWidth: appWindow.width*0.95
-
     closePolicy: Popup.NoAutoClose
 
     parent: Overlay.overlay
-
-    x: Math.round((appWindow.width - width) / 2)
-    y: Math.round((appWindow.height - height) / 2)
 
     modal: true
 
     title: qsTr("Warning: file exists already") + App.loc.emptyString
 
-    contentItem: ColumnLayout {
-
-        ListView {
-            clip: true
-            Layout.fillWidth: true
-            Layout.preferredHeight: Math.min(contentHeight, 150)
-            Layout.maximumWidth: root.availWidth
-            ScrollBar.vertical: ScrollBar {
-                active: parent.contentHeight > 150
-            }
-            model: root.files
-            delegate: BaseLabel {
-                id: lbl
-                width: parent.width
-                elide: Text.ElideMiddle
-                text: modelData
-            }
+    ListView
+    {
+        clip: true
+        Layout.fillWidth: true
+        Layout.maximumWidth: ctMaxWidth
+        Layout.preferredHeight: Math.min(contentHeight, 150)
+        ScrollBar.vertical: ScrollBar {
+            active: parent.contentHeight > 150
+        }
+        model: root.files
+        BaseFontMetrics {id: fm}
+        implicitWidth: {
+            let result = 0;
+            for (let i = 0; i < model.length; ++i)
+                result = Math.max(result, fm.advanceWidth(model[i]));
+            return result;
         }
 
-        BaseCheckBox {
-            id: remember
-            text: qsTr("Remember my choice for all downloads") + App.loc.emptyString
+        delegate: BaseLabel {
+            id: lbl
+            width: parent.width
+            elide: Text.ElideMiddle
+            text: modelData
+        }
+    }
+
+    BaseCheckBox {
+        id: remember
+        text: qsTr("Remember my choice for all downloads") + App.loc.emptyString
+        Layout.fillWidth: true
+        Layout.maximumWidth: ctMaxWidth
+        wrapMode: Text.WordWrap
+    }
+
+    BaseDialogButtonsLayout 
+    {
+        BaseDialogButton {
+            text: qsTr("Rename (%1)").arg(root.countdown) + App.loc.emptyString
+            primary: true
+            onClicked: root.actionSelected(AbstractDownloadsUi.DfeaRename)
         }
 
-        GridLayout {
-            Layout.topMargin: 10
-            Layout.bottomMargin: 10
-            Layout.alignment: Qt.AlignRight
-            Layout.maximumWidth: root.availWidth
+        BaseDialogButton {
+            text: qsTr("Overwrite") + App.loc.emptyString
+            onClicked: root.actionSelected(AbstractDownloadsUi.DfeaOverwrite)
+        }
 
-            rowSpacing: 0
-            columnSpacing: 0
+        BaseDialogButton {
+            text: qsTr("Abort") + App.loc.emptyString
+            onClicked: root.actionSelected(AbstractDownloadsUi.DfeaAbort)
+        }
 
-            readonly property bool hasSpace: b1.implicitWidth + b2.implicitWidth + b3.implicitWidth + 30 <= root.availWidth
-            columns: hasSpace ? -1 : 1
-            rows: hasSpace ? 1 : -1
-
-            DialogButton {
-                id: b1
-                text: qsTr("Rename (%1)").arg(root.countdown) + App.loc.emptyString
-                onClicked: root.actionSelected(AbstractDownloadsUi.DfeaRename)
-            }
-
-            DialogButton {
-                id: b2
-                text: qsTr("Overwrite") + App.loc.emptyString
-                onClicked: root.actionSelected(AbstractDownloadsUi.DfeaOverwrite)
-            }
-
-            DialogButton {
-                id: b3
-                text: qsTr("Abort") + App.loc.emptyString
-                onClicked: root.actionSelected(AbstractDownloadsUi.DfeaAbort)
-            }
-
-            Timer {
-                id: countdownTimer
-                interval: 1000
-                running: false
-                repeat: true
-                onTriggered: timerHandler()
-            }
+        Timer {
+            id: countdownTimer
+            interval: 1000
+            running: false
+            repeat: true
+            onTriggered: timerHandler()
         }
     }
 

@@ -34,25 +34,14 @@ ListView
 //        height: downloadsViewItem.height + itemDivider.height
         color: "transparent"
 
-        Rectangle
-        {
-            id: leftBorder
-            anchors.left: parent.left
-            width: appWindow.showBordersInDownloadsList ? parent.width * 0.1 : 0
-            height: downloadsViewItemWraper.height
-            color: "transparent"
-        }
-
         DownloadsViewItem
         {
             id: downloadsViewItem
 
             view: downloadsViewItemWraper.ListView.view
-            //width: listView.width
-            anchors.left: leftBorder.right
-            anchors.right: rightBorder.left
+            width: listView.width
 
-            onDownloadSelected: listView.downloadSelected(model_id)
+            onDownloadSelected: listView.downloadSelected(model.id)
             onDownloadUnselected: listView.downloadUnselected()
         }
 
@@ -60,21 +49,11 @@ ListView
         {
             id: itemDivider
             color: appWindow.theme.border
-            //width: listView.width
-            anchors.left: leftBorder.right
-            anchors.right: rightBorder.left
+            width: listView.width
             anchors.top: downloadsViewItem.bottom
             height: 1
         }
 
-        Rectangle
-        {
-            id: rightBorder
-            anchors.right: parent.right
-            width: appWindow.showBordersInDownloadsList ? parent.width * 0.1 : 0
-            height: downloadsViewItemWraper.height
-            color: "transparent"
-        }
     }
 
     footer: Rectangle {
@@ -85,4 +64,12 @@ ListView
 
     ScrollIndicator.horizontal: ScrollIndicator { }
     ScrollIndicator.vertical: ScrollIndicator { }
+
+    Component.onCompleted: {
+        selectedDownloadsTools.registerListView(this);
+    }
+
+    Component.onDestruction: {
+        selectedDownloadsTools.unregisterListView(this);
+    }
 }

@@ -10,69 +10,56 @@ import "../BaseElements"
 CenteredDialog
 {
     id: root
-    width: 320
 
     modal: true
 
-    contentItem: Column {
-        width: parent.width
-        spacing: 10
-        anchors.margins: 20
+    title: qsTr("Mobile data usage") + App.loc.emptyString
 
-        DialogTitle {
-            text: qsTr("Mobile data usage") + App.loc.emptyString
-            Layout.fillWidth: true
+    BaseLabel
+    {
+        text: qsTr("Waiting for Wi-Fi to start download.") + App.loc.emptyString
+        Layout.fillWidth: true
+        Layout.maximumWidth: root.ctMaxWidth
+        wrapMode: Label.WordWrap
+        horizontalAlignment: Text.AlignLeft
+        font: uicore.buildFont({}, uicore.fontSizeV1(16*appWindow.fontZoom))
+    }
+
+    BaseLabel
+    {
+        text: qsTr("Would you like to enable usage of mobile data? *") + App.loc.emptyString
+        Layout.fillWidth: true
+        Layout.maximumWidth: root.ctMaxWidth
+        wrapMode: Label.WordWrap
+        horizontalAlignment: Text.AlignLeft
+        font: uicore.buildFont({}, uicore.fontSizeV1(16*appWindow.fontZoom))
+    }
+
+    BaseCheckBox {
+        id: dontAsk
+        text: qsTr("Don't ask again") + App.loc.emptyString
+    }
+
+    BaseDialogButtonsLayout 
+    {
+        BaseDialogButton {
+            text: qsTr("Yes") + App.loc.emptyString
+            primary: true
+            onClicked: root.setMobileDataUsage(true)
         }
 
-        Label
-        {
-            text: qsTr("Waiting for Wi-Fi to start download.") + App.loc.emptyString
-            topPadding: 10
-            width: parent.width
-            wrapMode: Label.WordWrap
-            anchors.left: parent.left
-            horizontalAlignment: Text.AlignLeft
+        BaseDialogButton {
+            text: qsTr("No") + App.loc.emptyString
+            onClicked: root.setMobileDataUsage(false)
         }
+    }
 
-        Label
-        {
-            text: qsTr("Would you like to enable usage of mobile data? *") + App.loc.emptyString
-            width: parent.width
-            wrapMode: Label.WordWrap
-            anchors.left: parent.left
-            horizontalAlignment: Text.AlignLeft
-        }
-
-        BaseCheckBox {
-            id: dontAsk
-            text: qsTr("Don't ask again") + App.loc.emptyString
-            anchors.left: parent.left
-        }
-
-        Row {
-            anchors.right: parent.right
-
-            spacing: 5
-
-            DialogButton {
-                text: qsTr("Yes") + App.loc.emptyString
-                onClicked: root.setMobileDataUsage(true)
-            }
-
-            DialogButton {
-                text: qsTr("No") + App.loc.emptyString
-                onClicked: root.setMobileDataUsage(false)
-            }
-        }
-
-        Label
-        {
-            text: qsTr("* additional charges may apply") + App.loc.emptyString
-            width: parent.width
-            horizontalAlignment: Qt.Right
-            wrapMode: Label.WordWrap
-            font.pixelSize: 12
-        }
+    BaseLabel
+    {
+        text: qsTr("* additional charges may apply") + App.loc.emptyString
+        Layout.fillWidth: true
+        Layout.maximumWidth: root.ctMaxWidth
+        wrapMode: Label.WordWrap
     }
 
     function setMobileDataUsage(value) {

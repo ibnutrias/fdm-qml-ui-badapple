@@ -185,11 +185,7 @@ ItemDelegate
                 selectedDownloadsTools.currentDownloadId = model.id;
                 var component = Qt.createComponent("DownloadsViewItemContextMenu.qml");
                 var menu = component.createObject(downloadItemMenuBtn, {
-                                                      "modelIds": [model.id],
-                                                      "finished": model.finished,
-                                                      "hasPostFinishedTasks": downloadsItemTools.hasPostFinishedTasks,
-                                                      "priority": model.priority,
-                                                      "downloadModel": downloadsItemTools.item
+                                                      "modelIds": [model.id]
                                                   });
                     menu.open();
                     menu.aboutToHide.connect(function(){

@@ -37,6 +37,7 @@ BaseDialog {
                 }
                 model: root.downloadIds
                 delegate: Rectangle {
+                    anchors.left: parent.left
                     width: listView.width - vsb.myWrapSize
                     height: lbl.height
                     color: 'transparent'

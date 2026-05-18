@@ -68,16 +68,9 @@ Rectangle
                 if (!current_ids.length)
                     return;
 
-                var id = current_ids[0];
-                var item = App.downloads.infos.info(id);
-
                 var component = Qt.createComponent("DownloadsViewItemContextMenu.qml");
                 var menu = component.createObject(folderBtn, {
-                                                      "modelIds": current_ids,
-                                                      "finished": item.finished,
-                                                      "hasPostFinishedTasks": item.hasPostFinishedTasks,
-                                                      "priority": item.priority,
-                                                      "downloadModel" : item
+                                                      "modelIds": current_ids
                                                   });
                 menu.open();
                 menu.aboutToHide.connect(function(){

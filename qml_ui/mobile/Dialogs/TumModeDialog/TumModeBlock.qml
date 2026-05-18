@@ -42,15 +42,13 @@ Column {
 
         BaseLabel {
             text: qsTr("Download speed") + App.loc.emptyString
-            font.pixelSize: 12
             width: 200
         }
 
         BaseLabel {
             text: (maxDownloadSpeed === 0 ? qsTr("Unlimited") : App.speedAsText(maxDownloadSpeed)) + App.loc.emptyString
             horizontalAlignment: Text.AlignHCenter
-            font.weight: Font.DemiBold
-            font.pixelSize: 12
+            font: uicore.buildFont({weight: Font.DemiBold})
             width: 60
         }
     }
@@ -74,24 +72,23 @@ Column {
             text: qsTr("Max. number of simultaneous downloads") + App.loc.emptyString
             wrapMode: Label.WordWrap
             width: 200
-            font.pixelSize: 12
         }
 
         BaseLabel {
             adaptive: true
             text: maxDownloadsCount
             horizontalAlignment: Text.AlignHCenter
-            font.weight: Font.DemiBold
+            font: uicore.buildFont({weight: Font.DemiBold})
             width: 60
-            font.pixelSize: 12
         }
     }
 
     SwitchSetting {
         visible: tumMode === TrafficUsageMode.Snail
         description: qsTr("Snail mode") + App.loc.emptyString
+        settingsPageStyle: false
         switchChecked: App.settings.tum.currentMode == TrafficUsageMode.Snail
-        onClicked: snailTools.toggleSnailMode()
+        onClicked: uicore.snailTools.toggleSnailMode()
     }
 
     BaseLabel {
@@ -101,7 +98,6 @@ Column {
         width: parent.width
         leftPadding: qtbug.leftPadding(20, 0)
         rightPadding: qtbug.rightPadding(20, 0)
-        font.pixelSize: 12
     }
 
     Rectangle {

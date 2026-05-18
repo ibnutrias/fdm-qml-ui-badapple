@@ -11,8 +11,6 @@ import "../../common"
 
 Flickable {
     id: root
-    anchors.fill: parent
-    anchors.margins: 14
 
     flickableDirection: Flickable.VerticalFlick
     ScrollIndicator.vertical: ScrollIndicator { }
@@ -25,9 +23,6 @@ Flickable {
 
     Item {
         anchors.fill: parent
-
-        anchors.leftMargin: appWindow.showBordersInDownloadsList ? parent.width * 0.1 : 0
-        anchors.rightMargin: appWindow.showBordersInDownloadsList ? parent.width * 0.1 : 0
 
         Column {
             id: topColumn
@@ -61,9 +56,7 @@ Flickable {
                         width: parent.width
                         text: downloadsItemTools.title
                         elide: Text.ElideRight
-                        font.pixelSize: 16
-                        font.family: "Roboto"
-                        font.weight: Font.Medium
+                        font: uicore.buildFont({weight: Font.Medium}, 16*appWindow.fontZoom)
                         anchors.left: parent.left
                     }
 

@@ -9,9 +9,12 @@ ToolButton {
     property bool switchChecked
     property string description
 
-    property int textMargins: 20
-    property int textHeighIncrement: 25
-    property int textFontSize: 16
+    property int textMargins: (appWindow.uiver === 1 ? 20 : appWindow.theme_v2.mainContentMargins)*appWindow.zoom
+    property int textHeighIncrement: 25*appWindow.zoom
+    property int textFontSize: (appWindow.uiver === 1 ? 16 : appWindow.theme_v2.fontSize)*appWindow.fontZoom
+
+    property bool settingsPageStyle: true
+    property int fontWeight: Font.Normal
 
     anchors.left: parent.left
     anchors.right: parent.right
@@ -46,7 +49,7 @@ ToolButton {
         anchors.right: parent.right
         color: "transparent"
 
-        implicitHeight: labelText.implicitHeight + textHeighIncrement
+        implicitHeight: Math.max(labelText.implicitHeight + textHeighIncrement, switch1.height)
         implicitWidth: labelText.implicitWidth + switch1.implicitWidth + 20
 
         clip: true
@@ -85,10 +88,11 @@ ToolButton {
             anchors.rightMargin: textMargins
             anchors.verticalCenter: parent.verticalCenter
             text: root.description
-            font.pixelSize: textFontSize
+            font: uicore.buildFont({weight: fontWeight}, textFontSize)
+            color: appWindow.uiver === 1 ?
+                       appWindow.theme.foreground :
+                       (settingsPageStyle ? appWindow.theme_v2.textColor2 : appWindow.theme_v2.textColor)
             wrapMode: Text.WordWrap
-            color: appWindow.theme.foreground
-            opacity: root.enabled ? 1 : 0.5
         }
 
         BaseSwitch {
@@ -96,7 +100,6 @@ ToolButton {
             anchors.right: parent.right
             anchors.rightMargin: textMargins
             anchors.verticalCenter: parent.verticalCenter
-
             checked: root.switchChecked
         }
     }

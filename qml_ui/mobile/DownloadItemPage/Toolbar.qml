@@ -17,7 +17,7 @@ BaseToolBar {
         ToolbarLabel {
             text: downloadsItemTools.title
             Layout.fillWidth: true
-            font.pixelSize: 14
+            font: uicore.buildFont({}, 14*appWindow.fontZoom)
         }
 
         ToolbarButton {
@@ -31,11 +31,7 @@ BaseToolBar {
                             groupOperationsBtn,
                             {
                                 "modelIds": [downloadsItemTools.itemId],
-                                "downloadItemPage" : true,
-                                "finished": downloadsItemTools.finished,
-                                "hasPostFinishedTasks": downloadsItemTools.hasPostFinishedTasks,
-                                "priority": downloadsItemTools.priority,
-                                "downloadModel": downloadsItemTools.item
+                                "downloadItemPage" : true
                             });
                 menu.open();
                 menu.aboutToHide.connect(function(){

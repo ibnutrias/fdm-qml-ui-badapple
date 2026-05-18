@@ -4,60 +4,43 @@ import QtQuick.Layouts
 import QtQuick.Controls.Material
 import org.freedownloadmanager.fdm
 import "BaseElements"
+import "BaseElements/V2"
 import "../common/Tools"
 
-Page {
+BasePage {
     property var downloadsIds: []
     property var filesIndices: []
     property bool wrongFilePathWarning: false
     property bool constantBitrateChecked
+
+    title: qsTr("Convert to mp4") + App.loc.emptyString
+
+    v1_okButtonVisible: true
+    v1_okButtonEnabled: !d.accepting && destinationDir.displayText
+    onV1_okButtonClicked: doOK()
+    goBackHandler: () => {
+                       d.accepting = false;
+                       stackView.pop();
+                   }
 
     QtObject {
         id: d
         property bool accepting: false
     }
 
-    header: BaseToolBar {
-        RowLayout {
-            anchors.fill: parent
+    ColumnLayout
+    {
+        spacing: 5*appWindow.zoom
+        Layout.fillWidth: true
 
-            ToolbarBackButton {
-                onClicked: {
-                    d.accepting = false;
-                    stackView.pop();
-                }
-            }
-
-            ToolbarLabel {
-                text: qsTr("Convert to mp4") + App.loc.emptyString
-                Layout.fillWidth: true
-            }
-
-            DialogButton {
-                text: qsTr("OK") + App.loc.emptyString
-                enabled: !d.accepting && destinationDir.displayText.length > 0
-                Layout.rightMargin: 10
-                textColor: appWindow.theme.toolbarTextColor
-                onClicked: doOK()
-            }
-        }
-    }
-
-    Column {
-        anchors.fill: parent
-        anchors.margins: 20
-        anchors.leftMargin: appWindow.showBordersInDownloadsList ? parent.width * 0.1 : 20
-        anchors.rightMargin: appWindow.showBordersInDownloadsList ? parent.width * 0.1 : 20
-        spacing: 10
-
-        BaseLabel
+        BasePageLabel
         {
-            anchors.left: parent.left
             text: qsTr("Save to") + App.loc.emptyString
         }
 
-        RowLayout{
-            width: parent.width
+        RowLayout
+        {
+            Layout.fillWidth: true
 
             BaseTextField
             {
@@ -68,20 +51,16 @@ Page {
                 inputMethodHints: Qt.ImhNoAutoUppercase | Qt.ImhNoPredictiveText | Qt.ImhSensitiveData
                 wrapMode: TextInput.WrapAnywhere
                 horizontalAlignment: Text.AlignLeft
-                onAccepted: root.doOK()
+                onAccepted: doOK()
             }
 
-            RoundButton {
+            DialogFlatButton
+            {
                 visible: !App.rc.client.active
                 enabled: !d.accepting
-                radius: 40
-                width: 40
-                height: 40
-                flat: true
-                icon.source: Qt.resolvedUrl("../images/download-item/folder.svg")
-                icon.color: appWindow.theme.foreground
-                icon.width: 18
-                icon.height: 18
+                iconSource: Qt.resolvedUrl(appWindow.uiver === 1 ?
+                                               "../images/download-item/folder.svg" :
+                                               "V2/open_folder.svg")
                 onClicked: {
                     stackView.waPush(filePicker.filePickerPageComponent, {initiator: "convertPage", downloadId: -1});
                 }
@@ -95,16 +74,29 @@ Page {
             }
         }
 
-        BaseLabel {
+        BaseLabel
+        {
             visible: wrongFilePathWarning
-            anchors.left: parent.left
             text: qsTr("The path contains invalid characters") + App.loc.emptyString
-            clip: true
-            elide: Text.ElideRight
-            font.pixelSize: 13
-            color: appWindow.theme.errorMessage
+            wrapMode: Text.WordWrap
+            color: appWindow.uiver === 1 ?
+                       appWindow.theme.errorMessage :
+                       appWindow.theme_v2.danger
         }
     }
+
+    DialogFlatButton_V2
+    {
+        visible: appWindow.uiver !== 1
+        text: qsTr("OK") + App.loc.emptyString
+        enabled: v1_okButtonEnabled
+        primary: true
+        onClicked: doOK()
+        Layout.fillWidth: true
+        Layout.minimumHeight: 40*appWindow.zoom
+    }
+
+    Item {Layout.fillHeight: true}
 
     function firstDownloadPath()
     {

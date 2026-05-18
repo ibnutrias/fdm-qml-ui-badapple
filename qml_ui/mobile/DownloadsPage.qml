@@ -5,54 +5,90 @@ import QtQuick.Controls.Material
 import org.freedownloadmanager.fdm
 import "../common"
 import "./BaseElements"
+import "./BaseElements/V2"
 import "./Dialogs"
 import "./Dialogs/TumModeDialog"
 import "../common/Tools"
+import "V2"
 
-Page
+BaseMainPage
 {
     id: root
 
-    header: Column {
-        height: 108
-        width: root.width
+    readonly property bool isSearchModeActive: state === "searchView"
 
-        MainToolbar {
-            id: upperBarLoader
+    objectName: uicore.downloadsPageName
+
+    function openSearchMode()
+    {
+        if (!isSearchModeActive)
+        {
+            if (appWindow.uiver !== 1)
+                searchText_V2.apply(true);
+            state = "searchView";
+            if (appWindow.uiver !== 1)
+                searchText_V2.forceActiveFocus();
         }
 
-        SearchToolbar {
-            id: searchBar
+        return true;
+    }
 
-            onSwitchMainView: { root.state = "mainView"; }
+    function closeSearchMode()
+    {
+        if (isSearchModeActive)
+        {
+            downloadsViewTools.resetDownloadsTitleFilter(true);
+            downloadsViewLoader.forceActiveFocus();
+            state = "mainView";
         }
 
-        ToolBarShadow {}
+        return true;
+    }
 
-        Connections {
-            id: connectionsWithUpperBar
-            target: upperBarLoader
+    function showAll()
+    {
+        downloadsViewTools.resetFilters();
+        downloadsViewLoader.forceActiveFocus();
+        root.state = "mainView";
+    }
 
-            onHamburgerClicked: leftDrawer.open()
-            onSwitchMainViewSelectMode: { root.state = "mainViewSelectMode"; }
-            onSwitchSearchView: { root.state = "searchView"; }
+    background: Rectangle
+    {
+        color: appWindow.uiver === 1 ?
+                   appWindow.theme.background :
+                   appWindow.theme_v2.bgColor
+
+        Rectangle
+        {
+            visible: appWindow.uiver !== 1
+            width: parent.width
+            height: header.height + 8 + 16
+            color: appWindow.theme_v2.bg300_2
         }
 
-        MainFiltersBar {
-            id: mainFiltersBar
-            visible: appWindow.hasDownloadMgr
-        }
-
-        SelectModeTopBar {
-            id: selectModeTopBar
-            onSwitchSelectModeOff: root.switchSelectModeOff()
+        HalfRoundRect_V2
+        {
+            visible: appWindow.uiver !== 1
+            where: HalfRoundRect_V2.Where.Top
+            radius: 16
+            color: appWindow.theme_v2.bgColor
+            anchors.fill: parent
+            anchors.topMargin: header.height + 8
         }
     }
 
-    onStateChanged: {
-        if (state === "searchView") {
-            searchBar.switchSearchView();
-        }
+    Component {
+        id: header_v1
+        DownloadsPageHeader {state: root.state}
+    }
+
+    Component {
+        id: header_v2
+        DownloadsPageHeader_V2 {state: root.state}
+    }
+
+    header: Loader {
+        sourceComponent: appWindow.uiver === 1 ? header_v1 : header_v2
     }
 
     state: "mainView"
@@ -74,32 +110,6 @@ Page
                 }
             }
             PropertyChanges {
-                target: newDownloadRoundBtn;
-                visible: appWindow.hasDownloadMgr;
-            }
-//            PropertyChanges {
-//                target: snailBtn;
-//                visible: true;
-//            }
-            PropertyChanges {
-                target: upperBarLoader;
-                enabled: true
-                visible: true;
-            }
-            PropertyChanges {
-                target: searchBar;
-                enabled: true
-                visible: false;
-            }
-            PropertyChanges {
-                target: mainFiltersBar;
-                visible: appWindow.hasDownloadMgr;
-            }
-            PropertyChanges {
-                target: selectModeTopBar;
-                visible: false;
-            }
-            PropertyChanges {
                 target: selectModeBar;
                 visible: false;
             }
@@ -113,32 +123,6 @@ Page
                 showDownloadItemMenuBtn: false;
                 selectMode: true;
                 searchMode: false;
-            }
-            PropertyChanges {
-                target: newDownloadRoundBtn;
-                visible: false;
-            }
-//            PropertyChanges {
-//                target: snailBtn;
-//                visible: false;
-//            }
-            PropertyChanges {
-                target: upperBarLoader;
-                enabled: false
-                visible: true;
-            }
-            PropertyChanges {
-                target: searchBar;
-                enabled: false
-                visible: false;
-            }
-            PropertyChanges {
-                target: mainFiltersBar;
-                visible: false;
-            }
-            PropertyChanges {
-                target: selectModeTopBar;
-                visible: true;
             }
             PropertyChanges {
                 target: selectModeBar;
@@ -161,32 +145,6 @@ Page
                 }
             }
             PropertyChanges {
-                target: newDownloadRoundBtn;
-                visible: false;
-            }
-//            PropertyChanges {
-//                target: snailBtn;
-//                visible: false;
-//            }
-            PropertyChanges {
-                target: upperBarLoader;
-                enabled: true
-                visible: false;
-            }
-            PropertyChanges {
-                target: searchBar;
-                enabled: true
-                visible: true;
-            }
-            PropertyChanges {
-                target: mainFiltersBar;
-                visible: appWindow.hasDownloadMgr;
-            }
-            PropertyChanges {
-                target: selectModeTopBar;
-                visible: false;
-            }
-            PropertyChanges {
                 target: selectModeBar;
                 visible: false;
             }
@@ -202,80 +160,52 @@ Page
                 searchMode: false;
             }
             PropertyChanges {
-                target: newDownloadRoundBtn;
-                visible: false;
-            }
-//            PropertyChanges {
-//                target: snailBtn;
-//                visible: false;
-//            }
-            PropertyChanges {
-                target: upperBarLoader;
-                enabled: false
-                visible: false;
-            }
-            PropertyChanges {
-                target: searchBar;
-                enabled: false
-                visible: true;
-            }
-            PropertyChanges {
-                target: mainFiltersBar;
-                visible: false;
-            }
-            PropertyChanges {
-                target: selectModeTopBar;
-                visible: true;
-            }
-            PropertyChanges {
                 target: selectModeBar;
                 visible: true;
             }
         }
     ]
 
-    Rectangle {
-        id: downloadPageBackground
-        anchors.fill: parent
-        color: appWindow.theme.background
-    }
-
-    LeftDrawer {
-        id: leftDrawer
-    }
-
-    DownloadsView
+    ColumnLayout
     {
-        id: downloadsView
-        anchors.fill: parent
         visible: !App.downloads.infos.empty
 
-        Component.onCompleted: {
-            selectedDownloadsTools.registerListView(this);
-        }
+        anchors.fill: parent
+        anchors.topMargin: appWindow.uiver === 1 ? 0 : 8*appWindow.zoom
 
-        Component.onDestruction: {
-            selectedDownloadsTools.unregisterListView(this);
-        }
-
-        onDownloadSelected: {
-            root.switchSelectModeOn();
-        }
-
-        onDownloadUnselected: {
-            var checked_ids = App.downloads.model.checkedIds;
-            if (checked_ids.length === 0) {
-                root.switchSelectModeOff();
+        SearchField_V2
+        {
+            id: searchText_V2
+            visible: appWindow.uiver !== 1 && root.isSearchModeActive
+            bgColor: appWindow.theme_v2.bg200
+            Layout.fillWidth: true
+            Layout.leftMargin: 16*appWindow.zoom
+            Layout.rightMargin: Layout.leftMargin
+            Layout.topMargin: Layout.leftMargin
+            Layout.minimumHeight: 48*appWindow.zoom
+            onDisplayTextChanged: apply()
+            onClearClicked: text = ""
+            function apply(applyImmediately) {
+                downloadsViewTools.setDownloadsTitleFilter(displayText, applyImmediately)
             }
         }
 
-        onFlickingChanged: changeRoundButtonsVisibility(!downloadsView.flicking)
-        onDraggingChanged: changeRoundButtonsVisibility(!downloadsView.dragging)
-
-        function changeRoundButtonsVisibility(visibility) {
-            if (root.state == "mainView") {
-//                snailBtn.visible = visibility;
-                newDownloadRoundBtn.visible = visibility && appWindow.hasDownloadMgr;
+        Loader {
+            id: downloadsViewLoader
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            source: Qt.resolvedUrl(appWindow.uiver === 1 ? "DownloadsView.qml" : "V2/DownloadsView_V2.qml")
+            onLoaded: {
+                if (appWindow.uiver === 1) {
+                    item.downloadSelected.connect(() => root.switchSelectModeOn());
+                    item.downloadUnselected.connect(
+                                () => {
+                                    var checked_ids = App.downloads.model.checkedIds;
+                                    if (checked_ids.length === 0) {
+                                        root.switchSelectModeOff();
+                                    }
+                                });
+                }
             }
         }
     }
@@ -284,55 +214,90 @@ Page
         id: selectSortFieldDialog
     }
 
-    RowLayout {
-        anchors.fill: parent
+    ColumnLayout
+    {
         visible: appWindow.hasDownloadMgr && App.downloads.infos.empty
+
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.left: parent.left
+        anchors.leftMargin: 12*appWindow.zoom
+        anchors.right: parent.right
+        anchors.rightMargin: 12*appWindow.zoom
+
+        spacing: 32*appWindow.zoom
+
+        SvgImage_V2
+        {
+            visible: appWindow.uiver !== 1
+            source: Qt.resolvedUrl("V2/empty_downloads_list.svg")
+            imageColor: appWindow.theme_v2.bg300_2
+            Layout.alignment: Qt.AlignHCenter
+        }
 
         BaseLabel {
             text: qsTr("Download list is empty. Add new download URL.") + App.loc.emptyString
             Layout.fillWidth: true
             wrapMode: Text.WordWrap
-            Layout.alignment: Qt.AlignTop | Qt.AlignHCenter
-            Layout.topMargin: 150
+            Layout.alignment: Qt.AlignHCenter
             horizontalAlignment: Text.AlignHCenter
+            color: appWindow.uiver === 1 ?
+                       appWindow.theme.foreground :
+                       appWindow.theme_v2.textColor2
+            font: uicore.buildFont({}, uicore.fontSizeV2(appWindow.theme_v2.fontSize+5)*appWindow.fontZoom)
+        }
+
+        Item {
+            visible: appWindow.uiver === 1
+            implicitHeight: parent.parent.height / 3
         }
     }
 
-    Label
+    BaseLabel
     {
         visible: !appWindow.hasDownloadMgr && !App.rc.client.active
         text: "<a href='#'>" + qsTr("Connect to remote %1").arg(App.shortDisplayName) + "</a>" + App.loc.emptyString
         onLinkActivated: connectToRemoteAppDlg.open()
         Material.accent: appWindow.theme.link
         anchors.centerIn: parent
+        font: uicore.buildFont({}, uicore.fontSizeV1(16*appWindow.fontZoom))
     }
 
     //empty search results
-    Rectangle {
+    Item {
         anchors.fill: parent
-        anchors.margins: 15
-        color: "transparent"
-        visible: !App.downloads.infos.empty && (downloadsViewTools.emptySearchResults || downloadsViewTools.emptyActiveDownloadsList || downloadsViewTools.emptyCompleteDownloadsList)
+        anchors.margins: 15*appWindow.zoom
+
+        visible: !App.downloads.infos.empty &&
+                 (downloadsViewTools.emptySearchResults ||
+                  downloadsViewTools.emptyActiveDownloadsList ||
+                  downloadsViewTools.emptyCompleteDownloadsList)
 
         ColumnLayout {
             anchors.top: parent.top
-            anchors.topMargin: Math.round(parent.height * 0.3)
+            anchors.topMargin: appWindow.uiver === 1 ?
+                                   Math.round(parent.height * 0.3) :
+                                   searchText_V2.height + 52*appWindow.zoom
             anchors.horizontalCenter: parent.horizontalCenter
             width: parent.width
+            spacing: (appWindow.uiver === 1 ? 5 : 16)*appWindow.zoom
 
             BaseLabel {
                 Layout.alignment: Qt.AlignHCenter
                 text: (downloadsViewTools.emptySearchResults ? qsTr("No results found for") + " \"" + downloadsViewTools.downloadsTitleFilter + "\"" :
                        downloadsViewTools.emptyActiveDownloadsList ? qsTr("No active downloads") :
                        downloadsViewTools.emptyCompleteDownloadsList ? qsTr("No completed downloads") : "") + App.loc.emptyString
-                font.pixelSize: 14
+                font: uicore.buildFont({}, (appWindow.uiver === 1 ? 14 : appWindow.theme_v2.fontSize)*appWindow.fontZoom)
                 Layout.preferredWidth: parent.width
                 wrapMode: Label.Wrap
                 horizontalAlignment: Text.AlignHCenter
-                opacity: 0.5
+                opacity: appWindow.uiver === 1 ? 0.5 : 1.0
+                color: appWindow.uiver === 1 ?
+                           appWindow.theme.foreground :
+                           appWindow.theme_v2.bg500
             }
 
             BaseLabel {
+                visible: appWindow.uiver === 1
                 Layout.alignment: Qt.AlignHCenter
                 text: "<a href='#'>" + qsTr("Show all") + App.loc.emptyString + "</a>"
                 Layout.preferredWidth: parent.width
@@ -341,11 +306,19 @@ Page
                 MouseArea {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        downloadsViewTools.resetFilters()
-                        root.state = "mainView";
-                    }
+                    onClicked: showAll()
                 }
+            }
+
+            DialogFlatButton_V2 {
+                visible: appWindow.uiver !== 1
+                text: qsTr("Show all") + App.loc.emptyString
+                Layout.fillWidth: true
+                Layout.leftMargin: 16*appWindow.zoom
+                Layout.rightMargin: Layout.leftMargin
+                Layout.minimumHeight: 40*appWindow.zoom
+                primary: true
+                onClicked: showAll()
             }
         }
     }
@@ -364,9 +337,14 @@ Page
     //Round add button - BEGIN
     RoundButton
     {
-        id: newDownloadRoundBtn
-
-        visible: appWindow.hasDownloadMgr
+        visible: appWindow.uiver === 1 &&
+                 appWindow.hasDownloadMgr &&
+                 root.state !== "mainViewSelectMode" &&
+                 root.state !== "searchView" &&
+                 root.state !== "searchViewSelectMode" &&
+                 downloadsViewLoader.item &&
+                 !downloadsViewLoader.item.flicking &&
+                 !downloadsViewLoader.item.dragging
 
         onClicked: appWindow.createDownloadDialog()
 

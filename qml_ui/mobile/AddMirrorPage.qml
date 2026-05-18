@@ -4,86 +4,45 @@ import QtQuick.Layouts
 import org.freedownloadmanager.fdm
 import QtQuick.Controls.Material
 import "BaseElements"
+import "BaseElements/V2"
 import "../common/Tools"
 
-Page {
+BasePage {
     property var downloadModel
 
-    header: Column {
-        height: 108
-        width: parent.width
+    title: qsTr("Add mirror") + App.loc.emptyString
 
-        BaseToolBar {
-            RowLayout {
-                anchors.fill: parent
+    v1_okButtonVisible: true
+    v1_okButtonEnabled: newUrl.displayText
+    onV1_okButtonClicked: doOK()
 
-                ToolbarBackButton {
-                    onClicked: stackView.pop()
-                }
-
-                ToolbarLabel {
-                    text: qsTr("Add mirror") + App.loc.emptyString
-                    Layout.fillWidth: true
-                }
-
-                DialogButton {
-                    text: qsTr("OK") + App.loc.emptyString
-                    Layout.rightMargin: qtbug.rightMargin(0, 10)
-                    Layout.leftMargin: qtbug.leftMargin(0, 10)
-                    textColor: appWindow.theme.toolbarTextColor
-                    enabled: newUrl.displayText.length > 0
-                    onClicked: doOK()
-                }
-            }
-        }
-
-        ToolBarShadow {}
-
-        ExtraToolBar {
-            Rectangle {
-                color: "transparent"
-                anchors.fill: parent
-                anchors.leftMargin: 20
-
-                BaseLabel {
-                    text: downloadModel.title
-                    width: parent.width
-                    anchors.verticalCenter: parent.verticalCenter
-                    elide: Text.ElideMiddle
-                }
-            }
-        }
+    BasePageLabel {
+        text: qsTr("Enter mirror URL") + App.loc.emptyString
     }
 
-    ColumnLayout {
-        anchors.left: parent.left
-        anchors.right: parent.right
-        spacing: 2
-        anchors.margins: 20
-
-        BaseLabel {
-            Layout.topMargin: 20
-            text: qsTr("Enter mirror URL") + App.loc.emptyString
-        }
-
-        Rectangle {
-            width: parent.width
-            height: newUrl.height
-            color: "transparent"
-
-           BaseTextField {
-                id: newUrl
-                anchors {
-                    left: parent.left
-                    right: parent.right
-                }
-                selectByMouse: true
-                inputMethodHints: Qt.ImhNoAutoUppercase | Qt.ImhNoPredictiveText | Qt.ImhSensitiveData
-                onAccepted: doOK()
-                focus: true
-            }
-        }
+    BaseTextField {
+        id: newUrl
+        Layout.fillWidth: true
+        selectByMouse: true
+        inputMethodHints: Qt.ImhNoAutoUppercase | Qt.ImhNoPredictiveText | Qt.ImhSensitiveData
+        onAccepted: doOK()
+        focus: true
     }
+
+    DialogFlatButton_V2
+    {
+        visible: appWindow.uiver !== 1
+        text: qsTr("OK") + App.loc.emptyString
+        enabled: v1_okButtonEnabled
+        primary: true
+        onClicked: doOK()
+        Layout.fillWidth: true
+        Layout.minimumHeight: 40*appWindow.zoom
+    }
+
+    Item {Layout.fillHeight: true}
+
+    Component.onCompleted: forceActiveFocus()
 
     function doOK()
     {

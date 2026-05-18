@@ -59,6 +59,7 @@ Item {
 
                 delegate: Item {
                     readonly property int rowHeigth: 22*appWindow.zoom
+                    anchors.left: parent.left
                     width: parent.width - sb.myWrapSize
                     height: rowHeigth
                     Layout.preferredHeight: rowHeigth

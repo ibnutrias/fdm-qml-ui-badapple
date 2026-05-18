@@ -30,102 +30,25 @@ Flickable
 
         spacing: 16*appWindow.zoom
 
-        Item
+        DownloadPreviewImage
         {
-            id: imageHolder
-
-            readonly property var preview: App.downloads.previews.preview(selectedDownloadsTools.currentDownloadId)
-            readonly property var previewUrl: preview && !preview.usingFileIconPreview ? preview.large : null
-            readonly property bool hasPreview: previewUrl && previewUrl.toString()
-            readonly property int supposedWidth: 104*appWindow.zoom
-            readonly property int supposedHeight: 128*appWindow.zoom
+            downloadId: selectedDownloadsTools.currentDownloadId
+            supposedWidth: 104*appWindow.zoom
+            supposedHeight: 128*appWindow.zoom
+            minimumHeight: 68*appWindow.zoom
+            folderImageUrl: Qt.resolvedUrl(Qt.platform.os === "osx" ? "folder_mac.svg" : "folder.svg")
+            folderImageHOffset: Qt.platform.os === "osx" ? 0 : 10*appWindow.zoom
+            folderImageVOffset: Qt.platform.os === "osx" ? 0 : 4*appWindow.zoom
 
             Layout.alignment: Qt.AlignTop
-            Layout.preferredWidth: hasPreview ?
-                                       previewHolder.recommendedWidth(supposedWidth, supposedHeight) :
-                                       supposedWidth
-            Layout.preferredHeight: hasPreview ?
-                                        previewHolder.recommendedHeight(supposedWidth, supposedHeight) :
-                                        supposedHeight
+            Layout.topMargin: 10*appWindow.zoom
             Layout.leftMargin: appWindow.theme_v2.mainWindowLeftMargin*appWindow.zoom
-
-            WaSvgImage
-            {
-                visible: !parent.hasPreview
-                anchors.left: parent.left
-                anchors.bottom: parent.bottom
-                anchors.leftMargin: 3*appWindow.zoom
-                anchors.bottomMargin: 6*appWindow.zoom
-                zoom: appWindow.zoom
-                source: parent.hasPreview ? "" : Qt.resolvedUrl(Qt.platform.os === "osx" ? "folder_mac.svg" : "folder.svg")
-            }
-
-            Item
-            {
-                id: previewHolder
-                visible: parent.hasPreview
-
-                readonly property int minimumHeight: 68*appWindow.zoom
-
-                function recommendedWidth(supposedWidth, supposedHeight)
-                {
-                    return previewImg.isHorizontal ?
-                                Math.max(supposedWidth, minimumHeight * previewImg.ratio) :
-                                supposedHeight * previewImg.ratio;
-                }
-
-                function recommendedHeight(supposedWidth, supposedHeight)
-                {
-                    return previewImg.isHorizontal ?
-                                Math.max(minimumHeight, supposedWidth / previewImg.ratio) :
-                                supposedHeight;
-                }
-
-                anchors.top: parent.top
-                anchors.topMargin: 10*appWindow.zoom
-
-                height: recommendedHeight(parent.width, parent.height)
-                width: recommendedWidth(parent.width, parent.height)
-
-                Image
-                {
-                    id: previewImg
-                    readonly property real ratio: sourceSize.height ? sourceSize.width / sourceSize.height : 0
-                    readonly property bool isHorizontal: ratio > 1
-                    source: imageHolder.hasPreview ? imageHolder.previewUrl : ""
-                    anchors.fill: parent
-                    visible: false
-                }
-
-                MultiEffect {
-                    source: previewImg
-                    anchors.fill: previewImg
-                    maskEnabled: true
-                    maskSource: previewImgMask
-                    maskThresholdMin: 0.5
-                    maskSpreadAtMin: 1.0
-                }
-
-                Item {
-                    id: previewImgMask
-                    width: previewImg.width
-                    height: previewImg.height
-                    layer.enabled: true
-                    layer.smooth: true
-                    visible: false
-                    Rectangle {
-                        anchors.fill: parent
-                        radius: 4*appWindow.zoom
-                        color: "black"
-                    }
-                }
-            }
 
             MouseAreaWithHand_V2 {
                 visible: !App.rc.client.active && downloadsItemTools.finished
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
-                onClicked: App.downloads.mgr.openDownload(downloadsItemTools.itemId, -1)
+                onClicked: App.downloads.mgr.openDownload(parent.downloadId, -1)
             }
         }
 
@@ -180,7 +103,7 @@ Flickable
             DownloadStatus_V2
             {
                 id: statusItem
-                visible: !absolutelyFinished
+                visible: downloadsItemTools.showProgressBar
                 Layout.fillWidth: true
             }
 

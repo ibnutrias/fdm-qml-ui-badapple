@@ -5,7 +5,7 @@ import org.freedownloadmanager.fdm.appfeatures
 import org.freedownloadmanager.fdm.abstractdownloadsui 
 import "../BaseElements"
 
-Menu {
+BaseMenu {
     id: root
     property var model: null
     property var downloadModel: null
@@ -16,7 +16,6 @@ Menu {
 
     modal: true
     dim: false
-    width: 260
 
     ActionGroup {
         id: filePriorityGroup

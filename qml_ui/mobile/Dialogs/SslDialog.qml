@@ -5,116 +5,100 @@ import org.freedownloadmanager.fdm
 import "../../common/Tools"
 import "../BaseElements"
 
-Dialog {
+CenteredDialog {
     id: root
 
-    readonly property int maximumWidth: Math.min(appWindow.width*0.8, appWindow.smallScreen ? 320 : 500)
+    readonly property int maximumWidth: root.ctMaxWidth
 
     parent: Overlay.overlay
 
-    x: Math.round((appWindow.width - width) / 2)
-    y: Math.round((appWindow.height - height) / 2)
-
     modal: true
 
-    contentItem: ColumnLayout {
+    title: qsTr("Security risk") + App.loc.emptyString
 
-        spacing: 10
-        clip: true
+    BaseLabel {
+        text: downloadTools.sslHost
+        wrapMode: Text.Wrap
+        Layout.fillWidth: true
+        Layout.maximumWidth: root.maximumWidth
+        horizontalAlignment: Text.AlignLeft
+    }
 
-        DialogTitle {
-            Layout.fillWidth: true
-            text: qsTr("Security risk") + App.loc.emptyString
-        }
+    BaseLabel {
+        text: downloadTools.sslHostIsUnknownErr ?
+                  qsTr("The authenticity of the host can't be established.") + App.loc.emptyString :
+                  qsTr("SSL Certificate is not valid.") + App.loc.emptyString
+        color: appWindow.uiver === 1 ?
+                   appWindow.theme.errorMessage :
+                   appWindow.theme_v2.danger
+        wrapMode: Text.Wrap
+        Layout.fillWidth: true
+        horizontalAlignment: Text.AlignLeft
+    }
 
+    BaseLabel {
+        Layout.fillWidth: true
+        text: downloadTools.sslHostIsUnknownErr ?
+                  qsTr("%1 key fingerprints").arg(downloadTools.sslAlg) + App.loc.emptyString :
+                  qsTr("Certificate fingerprints") + App.loc.emptyString
+    }
+
+    ColumnLayout {
+        Layout.fillWidth: true
+        spacing: 5*appWindow.zoom
         BaseLabel {
-            text: downloadTools.sslHost
-            color: "#737373"
+            text: qsTr("SHA-256:") + App.loc.emptyString
+            wrapMode: Text.Wrap
+        }
+        BaseLabel {
+            text: downloadTools.sslSha256Fingerprint
             wrapMode: Text.Wrap
             Layout.fillWidth: true
             Layout.maximumWidth: root.maximumWidth
-            horizontalAlignment: Text.AlignLeft
+        }
+    }
+
+    ColumnLayout {
+        Layout.fillWidth: true
+        spacing: 5*appWindow.zoom
+        BaseLabel {
+            text: qsTr("SHA1:") + App.loc.emptyString
+            wrapMode: Text.Wrap
         }
 
         BaseLabel {
+            text: downloadTools.sslSha1Fingerprint
+            wrapMode: Text.Wrap
+            Layout.fillWidth: true
+            Layout.maximumWidth: root.maximumWidth
+        }
+    }
+
+    BaseLabel {
+        visible: downloadTools.sslHostIsUnknownErr
+        Layout.fillWidth: true
+        text: qsTr("If you trust this host, select Accept to remember the key and carry on connecting.") + App.loc.emptyString
+        wrapMode: Text.Wrap
+    }
+
+    BaseDialogButtonsLayout 
+    {
+        BaseDialogButton {
             text: downloadTools.sslHostIsUnknownErr ?
-                      qsTr("The authenticity of the host can't be established.") + App.loc.emptyString :
-                      qsTr("SSL Certificate is not valid.") + App.loc.emptyString
-            color: "#737373"
-            wrapMode: Text.Wrap
-            Layout.fillWidth: true
-            horizontalAlignment: Text.AlignLeft
-        }
-
-        ColumnLayout {
-            Layout.fillWidth: true
-            spacing: 10
-            BaseLabel {
-                Layout.fillWidth: true
-                text: downloadTools.sslHostIsUnknownErr ?
-                          qsTr("%1 key fingerprints").arg(downloadTools.sslAlg) + App.loc.emptyString :
-                          qsTr("Certificate fingerprints") + App.loc.emptyString
-            }
-
-            ColumnLayout {
-                Layout.fillWidth: true
-                spacing: 5
-                BaseLabel {
-                    text: qsTr("SHA-256:") + App.loc.emptyString
-                    wrapMode: Text.Wrap
-                }
-                BaseLabel {
-                    text: downloadTools.sslSha256Fingerprint
-                    wrapMode: Text.Wrap
-                    Layout.fillWidth: true
-                    Layout.maximumWidth: root.maximumWidth
-                }
-            }
-
-            ColumnLayout {
-                Layout.fillWidth: true
-                spacing: 5
-                BaseLabel {
-                    text: qsTr("SHA1:") + App.loc.emptyString
-                    wrapMode: Text.Wrap
-                }
-
-                BaseLabel {
-                    text: downloadTools.sslSha1Fingerprint
-                    wrapMode: Text.Wrap
-                    Layout.fillWidth: true
-                    Layout.maximumWidth: root.maximumWidth
-                }
+                      qsTr("Accept") + App.loc.emptyString :
+                      qsTr("Continue") + App.loc.emptyString
+            onClicked: {
+                downloadTools.acceptSsl();
+                root.close();
             }
         }
 
-        BaseLabel {
-            visible: downloadTools.sslHostIsUnknownErr
-            Layout.fillWidth: true
-            text: qsTr("If you trust this host, select Accept to remember the key and carry on connecting.") + App.loc.emptyString
-            wrapMode: Text.Wrap
-        }
-
-        RowLayout {
-            spacing: 5
-            Layout.alignment: Qt.AlignHCenter
-
-            DialogButton {
-                text: downloadTools.sslHostIsUnknownErr ?
-                          qsTr("Accept") + App.loc.emptyString :
-                          qsTr("Continue") + App.loc.emptyString
-                onClicked: {
-                    downloadTools.acceptSsl();
-                    root.close();
-                }
-            }
-
-            DialogButton {
-                text: qsTr("Cancel") + App.loc.emptyString
-                onClicked: {
-                    downloadTools.rejectSsl();
-                    root.close();
-                }
+        BaseDialogButton {
+            text: qsTr("Cancel") + App.loc.emptyString
+            primary: true
+            onClicked: {
+                downloadTools.rejectSsl();
+                root.close();
             }
         }
     }

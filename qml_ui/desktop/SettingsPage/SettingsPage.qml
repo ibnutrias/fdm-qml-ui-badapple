@@ -155,6 +155,7 @@ Page {
                     {
                         id: tabsCol
 
+                        anchors.left: parent.left
                         width: parent.width - sbar.myWrapSize
 
                         RightItemLabel {

@@ -1,79 +1,65 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Layouts
 import org.freedownloadmanager.fdm
 import "BaseElements"
 import "Dialogs"
 
-Page {
+BasePage {
 
     property string pageName: "WaitingPage"
 
-    header: Column {
-        height: 108
-        width: parent.width
+    title: qsTr("Loading") + (App.asyncLoadMgr.remoteName ?
+                                  " (" + qsTr("Connection to %1").arg(App.asyncLoadMgr.remoteName) + ")" + App.loc.emptyString :
+                                  "")
 
-        BaseToolBar {}
-        ToolBarShadow {}
-        ExtraToolBar {}
+    backButtonVisible: false
 
-        Rectangle {
-            visible: App.asyncLoadMgr.remoteName
-            height: 30
-            width: parent.width
-            color: appWindow.theme.waitPageClr1
-            BaseLabel {
-                text: qsTr("Loading") + (App.asyncLoadMgr.remoteName ?
-                          " (" + qsTr("Connection to %1").arg(App.asyncLoadMgr.remoteName) + ")" + App.loc.emptyString :
-                          "")
-                anchors.centerIn: parent
-            }
-        }
+    Item {Layout.fillHeight: true}
+
+    BaseLabel
+    {
+        visible: App.asyncLoadMgr.status
+
+        text: App.asyncLoadMgr.status +
+              (App.asyncLoadMgr.error ? " " + qsTr("Error: %1").arg(App.asyncLoadMgr.error) : "") +
+              App.loc.emptyString
+
+        Layout.fillWidth: true
+        wrapMode: Text.WordWrap
+        horizontalAlignment: lineCount === 1 ? Text.AlignHCenter : Text.AlignLeft
     }
 
-    Column
+    RowLayout
     {
-        spacing: 10
-        anchors.centerIn: parent
+        visible: !App.asyncLoadMgr.loading
+        spacing: 10*appWindow.zoom
+        Layout.alignment: Qt.AlignHCenter
 
-        BaseLabel
+        DialogButton
         {
-            visible: App.asyncLoadMgr.status
-            anchors.horizontalCenter: parent.horizontalCenter
-
-            text: App.asyncLoadMgr.status +
-                  (App.asyncLoadMgr.error ? " " + qsTr("Error: %1").arg(App.asyncLoadMgr.error) : "") +
-                  App.loc.emptyString
-        }
-
-        Row
-        {
-            visible: !App.asyncLoadMgr.loading
-            spacing: 10
-            anchors.horizontalCenter: parent.horizontalCenter
-
-            DialogButton
-            {
-                visible: App.asyncLoadMgr.canUserRetryLoad
-                text: qsTr("Retry") + App.loc.emptyString
-                onClicked: App.asyncLoadMgr.retryLoad()
-            }
-
-            DialogButton
-            {
-                visible: App.asyncLoadMgr.canUserCancelLoad
-                text: qsTr("Cancel") + App.loc.emptyString
-                onClicked: App.asyncLoadMgr.cancelLoad()
-            }
+            visible: App.asyncLoadMgr.canUserRetryLoad
+            text: qsTr("Retry") + App.loc.emptyString
+            onClicked: App.asyncLoadMgr.retryLoad()
         }
 
         DialogButton
         {
-            visible: App.asyncLoadMgr.loading && App.asyncLoadMgr.canUserCancelLoad
-            text: qsTr("Abort") + App.loc.emptyString
+            visible: App.asyncLoadMgr.canUserCancelLoad
+            text: qsTr("Cancel") + App.loc.emptyString
             onClicked: App.asyncLoadMgr.cancelLoad()
-            anchors.horizontalCenter: parent.horizontalCenter
         }
     }
+
+    DialogButton
+    {
+        visible: App.asyncLoadMgr.loading && App.asyncLoadMgr.canUserCancelLoad
+        text: qsTr("Abort") + App.loc.emptyString
+        onClicked: App.asyncLoadMgr.cancelLoad()
+        Layout.alignment: Qt.AlignHCenter
+    }
+
+    Item {Layout.fillHeight: true}
 
     AuthDialog
     {
@@ -82,7 +68,6 @@ Page {
         passwordOnly: true
         onAccepted: App.asyncLoadMgr.authorize(password, save)
         onRejected: App.asyncLoadMgr.cancelLoad()
-        anchors.centerIn: parent
     }
 
     Connections

@@ -7,13 +7,10 @@ import org.freedownloadmanager.fdm.dmcoresettings
 import "."
 import "../BaseElements/"
 
-Page {
+BaseSettingsPage {
     id: root
 
-    header: PageHeaderWithBackArrow {
-        pageTitle: qsTr("Remote control settings") + App.loc.emptyString
-        onPopPage: root.StackView.view.pop()
-    }
+    title: qsTr("Remote control settings") + App.loc.emptyString
 
     SwitchSetting {
         description: qsTr("Don't use network proxy") + App.loc.emptyString

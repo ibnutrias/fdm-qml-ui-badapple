@@ -7,132 +7,140 @@ import org.freedownloadmanager.fdm
 import org.freedownloadmanager.fdm.appsettings
 import org.freedownloadmanager.fdm.appnotificationevent
 
-Page {
+BaseSettingsPage {
     id: root
 
-    header: PageHeaderWithBackArrow {
-        pageTitle: qsTr("Sounds settings") + App.loc.emptyString
-        onPopPage: root.StackView.view.pop()
-    }
+    title: qsTr("Sounds settings") + App.loc.emptyString
 
-    Rectangle {
-        id: settingsWraper
-        color: "transparent"
+    Flickable
+    {
         anchors.fill: parent
+        flickableDirection: Flickable.VerticalFlick
+        ScrollIndicator.vertical: ScrollIndicator { }
+        boundsBehavior: Flickable.StopAtBounds
 
-        Flickable
-        {
-            anchors.fill: parent
-            flickableDirection: Flickable.VerticalFlick
-            ScrollIndicator.vertical: ScrollIndicator { }
-            boundsBehavior: Flickable.StopAtBounds
+        contentHeight: contentColumn.height
 
-            contentHeight: contentColumn.height
+        clip: true
 
-            clip: true
+        Column {
+            id: contentColumn
+            anchors.left: parent.left
+            anchors.right: parent.right
+            topPadding: 7
 
-            Column {
-                id: contentColumn
-                anchors.left: parent.left
-                anchors.right: parent.right
-                topPadding: 7
-
-                SwitchSetting {
-                    id: switchSetting1
-                    description: qsTr("Use sounds") + App.loc.emptyString
-                    switchChecked: App.settings.toBool(App.settings.app.value(AppSettings.EnableSoundNotifications))
-                    onClicked: {
-                        switchChecked = !switchChecked;
-                        App.settings.app.setValue(
-                                    AppSettings.EnableSoundNotifications,
-                                    App.settings.fromBool(switchChecked));
-                    }
+            SwitchSetting {
+                id: switchSetting1
+                description: qsTr("Use sounds") + App.loc.emptyString
+                switchChecked: App.settings.toBool(App.settings.app.value(AppSettings.EnableSoundNotifications))
+                onClicked: {
+                    switchChecked = !switchChecked;
+                    App.settings.app.setValue(
+                                AppSettings.EnableSoundNotifications,
+                                App.settings.fromBool(switchChecked));
                 }
-
-                Rectangle {
-                    width: parent.width
-                    height: 200
-                    color: "transparent"
-
-                    ListView {
-                        id: soundsList
-                        focus: true
-                        enabled: switchSetting1.switchChecked
-                        anchors.fill: parent
-                        anchors.leftMargin: 20
-                        anchors.rightMargin: 20
-
-                        property int currentSetting: -1
-
-                        model: []
-
-                        delegate: Rectangle {
-                            property int rowHeigth: 50
-                            width: parent.width
-                            height: rowHeigth
-                            color: "transparent"
-
-                            RowLayout {
-                                anchors.verticalCenter: parent.verticalCenter
-
-                                width: parent.width
-                                spacing: 15
-                                BaseLabel {
-                                    text: modelData.text
-                                    font.pixelSize: 15
-                                    wrapMode: Text.WordWrap
-                                    horizontalAlignment: Text.AlignLeft
-                                    //anchors.verticalCenter: parent.verticalCenter
-                                    color: appWindow.theme.foreground
-                                    Layout.fillWidth: true
-                                    opacity: soundsList.enabled ? 1 : 0.5
-                                }
-
-                                ToolbarButton {
-                                    icon.source: Qt.resolvedUrl("../../images/mobile/music_note.svg")
-                                    icon.color: appWindow.theme.foreground
-
-                                    enabled: modelData.soundSource.toString()
-                                    onClicked: App.soundNotifMgr.playSound(modelData.setting)
-                                }
-
-                                ToolbarButton {
-                                    icon.source: Qt.resolvedUrl("../../images/mobile/music_off.svg")
-                                    icon.color: appWindow.theme.foreground
-
-                                    enabled: modelData.soundSource.toString()
-                                    onClicked: {
-                                        soundsList.currentSetting = modelData.setting;
-                                        App.soundNotifMgr.setSoundSource(soundsList.currentSetting, '');
-                                        soundsList.reloadModel();
-                                    }
-                                }
-
-                                ToolbarButton {
-                                    icon.source: Qt.resolvedUrl("../../images/mobile/queue_music.svg")
-                                    icon.color: appWindow.theme.foreground
-
-                                    onClicked: {
-                                        soundsList.currentSetting = modelData.setting;
-                                        openFileDlg.open();
-                                    }
-                                }
-                            }
-                        }
-
-                        Component.onCompleted: soundsList.reloadModel()
-
-                        function reloadModel() {
-                            soundsList.model = [{ text: qsTr("Downloads added"), setting: AppNotificationEvent.DownloadsAdded, soundSource: App.soundNotifMgr.soundSource(AppNotificationEvent.DownloadsAdded) },
-                                              { text: qsTr("Downloads completed"), setting: AppNotificationEvent.DownloadsCompleted, soundSource: App.soundNotifMgr.soundSource(AppNotificationEvent.DownloadsCompleted) },
-                                              { text: qsTr("Downloads failed"), setting: AppNotificationEvent.DownloadsFailed, soundSource: App.soundNotifMgr.soundSource(AppNotificationEvent.DownloadsFailed) },
-                                              { text: qsTr("No active downloads"), setting: AppNotificationEvent.NoActiveDownloads, soundSource: App.soundNotifMgr.soundSource(AppNotificationEvent.NoActiveDownloads) }];
-                        }
-                    }
-                }
-
             }
 
+            Repeater {
+                id: soundsList
+                focus: true
+
+                property int currentSetting: -1
+
+                model: []
+
+                delegate: RowLayout
+                {
+                    enabled: switchSetting1.switchChecked
+
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.leftMargin: ((appWindow.uiver === 1 ? 20 : appWindow.theme_v2.mainContentMargins) +
+                                         (appWindow.uiver === 1 ? 0 : 16))*appWindow.zoom
+                    anchors.rightMargin: (appWindow.uiver === 1 ? 10 : 0)*appWindow.zoom
+
+                    spacing: 15*appWindow.zoom
+
+                    BasePageLabel {
+                        text: modelData.text
+                        font: uicore.buildFont({}, (appWindow.uiver === 1 ? 15 : appWindow.theme_v2.fontSize)*appWindow.fontZoom)
+                        wrapMode: Text.WordWrap
+                        horizontalAlignment: Text.AlignLeft
+                        Layout.fillWidth: true
+                        opacity: soundsList.enabled ? 1 : 0.5
+                    }
+
+                    ToolbarButton {
+                        icon.source: Qt.resolvedUrl(appWindow.uiver === 1 ?
+                                                        "../../images/mobile/music_note.svg" :
+                                                        "V2/sound_on.svg")
+                        icon.color: appWindow.uiver === 1 ?
+                                        appWindow.theme.foreground :
+                                        (enabled ? appWindow.theme_v2.primary : appWindow.theme_v2.textColor)
+
+                        enabled: modelData.soundSource.toString()
+                        onClicked: App.soundNotifMgr.playSound(modelData.setting)
+                    }
+
+                    ToolbarButton {
+                        icon.source: Qt.resolvedUrl(appWindow.uiver === 1 ?
+                                                        "../../images/mobile/music_off.svg" :
+                                                        "V2/sound_off.svg")
+                        icon.color: appWindow.uiver === 1 ?
+                                        appWindow.theme.foreground :
+                                        appWindow.theme_v2.textColor
+
+                        enabled: modelData.soundSource.toString()
+                        onClicked: {
+                            soundsList.currentSetting = modelData.setting;
+                            App.soundNotifMgr.setSoundSource(soundsList.currentSetting, '');
+                            soundsList.reloadModel();
+                        }
+                    }
+
+                    ToolbarButton {
+                        icon.source: Qt.resolvedUrl(appWindow.uiver === 1 ?
+                                                        "../../images/mobile/queue_music.svg" :
+                                                        "V2/sound_browse.svg")
+                        icon.color: appWindow.uiver === 1 ?
+                                        appWindow.theme.foreground :
+                                        appWindow.theme_v2.textColor
+
+                        onClicked: {
+                            soundsList.currentSetting = modelData.setting;
+                            openFileDlg.open();
+                        }
+                    }
+                }
+
+                Component.onCompleted: soundsList.reloadModel()
+
+                function reloadModel()
+                {
+                    soundsList.model = [
+                                {
+                                    text: qsTr("Downloads added"),
+                                    setting: AppNotificationEvent.DownloadsAdded,
+                                    soundSource: App.soundNotifMgr.soundSource(AppNotificationEvent.DownloadsAdded)
+                                },
+                                {
+                                    text: qsTr("Downloads completed"),
+                                    setting: AppNotificationEvent.DownloadsCompleted,
+                                    soundSource: App.soundNotifMgr.soundSource(AppNotificationEvent.DownloadsCompleted)
+                                },
+                                {
+                                    text: qsTr("Downloads failed"),
+                                    setting: AppNotificationEvent.DownloadsFailed,
+                                    soundSource: App.soundNotifMgr.soundSource(AppNotificationEvent.DownloadsFailed)
+                                },
+                                {
+                                    text: qsTr("No active downloads"),
+                                    setting: AppNotificationEvent.NoActiveDownloads,
+                                    soundSource: App.soundNotifMgr.soundSource(AppNotificationEvent.NoActiveDownloads)
+                                }
+                            ];
+                }
+            }
         }
     }
 

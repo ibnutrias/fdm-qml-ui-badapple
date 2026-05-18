@@ -9,7 +9,6 @@ import "../BaseElements"
 Drawer {
     id: root
     width: parent.width
-    height: 205
     edge: Qt.BottomEdge
     Material.background: appWindow.theme.background
     Material.foreground: appWindow.theme.foreground
@@ -27,7 +26,7 @@ Drawer {
     ListView {
         id: sort
         width: 330
-        height: parent.height
+        implicitHeight: 205
         anchors.horizontalCenter: parent.horizontalCenter
 
         header: Pane {
@@ -37,7 +36,7 @@ Drawer {
 
             Label {
                 text: qsTr("Sort") + App.loc.emptyString
-                font.pixelSize: 17
+                font.pixelSize: 17*appWindow.fontZoom
                 font.weight: Font.DemiBold
                 anchors.topMargin: 15
                 anchors.verticalCenter: parent.verticalCenter
@@ -53,7 +52,7 @@ Drawer {
             checked: uiSettingsTools.settings.filePickerSortField === model.value
             width: parent.width
             height: 30
-            font.pixelSize: 14
+            font.pixelSize: 14*appWindow.fontZoom
             onClicked: {selectedMode = model.value}
             padding: 0
 

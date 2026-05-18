@@ -649,6 +649,52 @@ Column
     }
 
     SettingsGroupColumn {
+
+        visible: !root.hidden
+        anchors.left: parent.left
+
+        SettingsSubgroupHeader{
+            anchors.left: parent.left
+            text: qsTr("Troubleshooting") + App.loc.emptyString
+        }
+
+        RowLayout {
+            anchors.left: parent.left
+            anchors.leftMargin: 12*appWindow.zoom
+
+            SettingsCheckBox0 {
+                text: qsTr("Enable logging") + App.loc.emptyString
+                checked: !App.isLogDisabled()
+                onClicked: App.setLogDisabled(!checked)
+            }
+
+            BaseLabel {
+                text: "*"
+                color: "red"
+                font.pixelSize: 14*appWindow.fontZoom
+                font.bold: true
+                Layout.alignment: Qt.AlignTop
+            }
+        }
+
+        RowLayout {
+            anchors.left: parent.left
+            anchors.leftMargin: 18*appWindow.zoom
+            opacity: 0.5
+            BaseLabel {
+                text: "*"
+                color: "red"
+                font.pixelSize: 14*appWindow.fontZoom
+                font.bold: true
+                Layout.alignment: Qt.AlignTop
+            }
+            BaseLabel {
+                text: qsTr("Restart is required") + App.loc.emptyString
+            }
+        }
+    }
+
+    SettingsGroupColumn {
         id: resetToDefaults
 
         anchors.left: parent.left

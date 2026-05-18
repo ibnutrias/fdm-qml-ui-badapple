@@ -7,9 +7,9 @@ ToolButton {
     id: root
 
     property string description
-    property int textMargin: 20
+    property int textMargin: (appWindow.uiver === 1 ? 20 : appWindow.theme_v2.mainContentMargins)*appWindow.zoom
     property int textHeighIncrement: 30
-    property int textPointSize: 16
+    property int textPointSize: (appWindow.uiver === 1 ? 16 : appWindow.theme_v2.fontSize)*appWindow.fontZoom
     property int textWeight: Font.Normal
 
     anchors.left: parent.left
@@ -82,11 +82,11 @@ ToolButton {
             anchors.rightMargin: textMargin
             anchors.verticalCenter: parent.verticalCenter
             text: root.description
-            font.pixelSize: textPointSize
-            font.weight: textWeight
+            font: uicore.buildFont({weight: textWeight}, textPointSize)
         }
 
         Image {
+            visible: appWindow.uiver === 1
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
             source: Qt.resolvedUrl("../../images/arr.svg")

@@ -4,61 +4,43 @@ import QtQuick.Layouts
 import QtQuick.Controls.Material
 import org.freedownloadmanager.fdm
 import "BaseElements"
+import "BaseElements/V2"
 import "../common/Tools"
 
-Page {
+BasePage {
     property var downloadsIds: []
     property var filesIndices: []
     property bool wrongFilePathWarning: false
     property bool constantBitrateChecked
+
+    title: (appWindow.smallScreen ? qsTr("Convert to mp3") : qsTr("Convert to mp3 with adjustable bitrate")) + App.loc.emptyString
+
+    v1_okButtonVisible: true
+    v1_okButtonEnabled: !d.accepting && destinationDir.displayText
+    onV1_okButtonClicked: doOK()
+    goBackHandler: () => {
+                       d.accepting = false;
+                       stackView.pop();
+                   }
 
     QtObject {
         id: d
         property bool accepting: false
     }
 
-    header: BaseToolBar {
-        RowLayout {
-            anchors.fill: parent
+    ColumnLayout
+    {
+        Layout.fillWidth: true
+        spacing: 5*appWindow.zoom
 
-            ToolbarBackButton {
-                onClicked: {
-                    d.accepting = false;
-                    stackView.pop();
-                }
-            }
-
-            ToolbarLabel {
-                text: (appWindow.smallScreen ? qsTr("Convert to mp3") : qsTr("Convert to mp3 with adjustable bitrate")) + App.loc.emptyString
-                Layout.fillWidth: true
-            }
-
-            DialogButton {
-                text: qsTr("OK") + App.loc.emptyString
-                enabled: !d.accepting && destinationDir.displayText.length > 0
-                Layout.rightMargin: qtbug.rightMargin(0, 10)
-                Layout.leftMargin: qtbug.leftMargin(0, 10)
-                textColor: appWindow.theme.toolbarTextColor
-                onClicked: doOK()
-            }
-        }
-    }
-
-    Column {
-        anchors.fill: parent
-        anchors.margins: 20
-        anchors.leftMargin: appWindow.showBordersInDownloadsList ? parent.width * 0.1 : 20
-        anchors.rightMargin: appWindow.showBordersInDownloadsList ? parent.width * 0.1 : 20
-        spacing: 10
-
-        BaseLabel
+        BasePageLabel
         {
-            anchors.left: parent.left
             text: qsTr("Save to") + App.loc.emptyString
         }
 
-        RowLayout{
-            width: parent.width
+        RowLayout
+        {
+            Layout.fillWidth: true
 
             BaseTextField
             {
@@ -69,26 +51,23 @@ Page {
                 inputMethodHints: Qt.ImhNoAutoUppercase | Qt.ImhNoPredictiveText | Qt.ImhSensitiveData
                 horizontalAlignment: Text.AlignLeft
                 wrapMode: TextInput.WrapAnywhere
-                onAccepted: root.doOK()
+                onAccepted: doOK()
             }
 
-            RoundButton {
+            DialogFlatButton
+            {
                 visible: !App.rc.client.active
                 enabled: !d.accepting
-                radius: 40
-                width: 40
-                height: 40
-                flat: true
-                icon.source: Qt.resolvedUrl("../images/download-item/folder.svg")
-                icon.color: appWindow.theme.foreground
-                icon.width: 18
-                icon.height: 18
+                iconSource: Qt.resolvedUrl(appWindow.uiver === 1 ?
+                                               "../images/download-item/folder.svg" :
+                                               "V2/open_folder.svg")
                 onClicked: {
                     stackView.waPush(filePicker.filePickerPageComponent, {initiator: "convertPage", downloadId: -1});
                 }
             }
 
-            Connections {
+            Connections
+            {
                 target: filePicker
                 onFolderSelected: {
                     onFolderSelected: { destinationDir.text = folderName }
@@ -96,25 +75,34 @@ Page {
             }
         }
 
-        BaseLabel {
+        BaseLabel
+        {
             visible: wrongFilePathWarning
             text: qsTr("The path contains invalid characters") + App.loc.emptyString
-            clip: true
-            elide: Text.ElideRight
-            font.pixelSize: 13
-            color: appWindow.theme.errorMessage
+            wrapMode: Text.WordWrap
+            color: appWindow.uiver === 1 ?
+                       appWindow.theme.errorMessage :
+                       appWindow.theme_v2.danger
         }
+    }
 
-        BaseLabel {
-            width: parent.width
+    ColumnLayout
+    {
+        Layout.fillWidth: true
+        spacing: 5*appWindow.zoom
+
+        BasePageLabel
+        {
             text: qsTr("Bitrate (quality)") + ':' + App.loc.emptyString
         }
 
-        Row {
-            width: parent.width
-            spacing: 20
+        RowLayout
+        {
+            Layout.fillWidth: true
+            spacing: 10*appWindow.zoom
 
-            BaseComboBox {
+            BaseComboBox
+            {
                 id: quality
 
                 model: [
@@ -126,32 +114,47 @@ Page {
                 onActivated: index => constantBitrateChecked = model[index].value
             }
 
-            Label
+            BaseLabel
             {
                 text: "<a href='https://wikipedia.org/wiki/Variable_bitrate'>VBR?</a>"
                 onLinkActivated: Qt.openUrlExternally(link)
                 Material.accent: appWindow.theme.link
-                anchors.verticalCenter: parent.verticalCenter
                 horizontalAlignment: Text.AlignLeft
+                font: uicore.buildFont({}, uicore.fontSizeV1(16*appWindow.fontZoom))
             }
+
+            Item {Layout.fillWidth: true}
         }
 
-        BitrateComboBox {
+        BitrateComboBox
+        {
             id: constantBitrate
             visible: constantBitrateChecked
             constantBitrate: true
             maxComboWidth: destinationDir.width
-            anchors.left: parent.left
         }
 
-        BitrateComboBox {
+        BitrateComboBox
+        {
             id: variableBitrate
             visible: !constantBitrateChecked
             constantBitrate: false
             maxComboWidth: destinationDir.width
-            anchors.left: parent.left
         }
     }
+
+    DialogFlatButton_V2
+    {
+        visible: appWindow.uiver !== 1
+        text: qsTr("OK") + App.loc.emptyString
+        enabled: v1_okButtonEnabled
+        primary: true
+        onClicked: doOK()
+        Layout.fillWidth: true
+        Layout.minimumHeight: 40*appWindow.zoom
+    }
+
+    Item {Layout.fillHeight: true}
 
     function firstDownloadPath()
     {

@@ -10,272 +10,274 @@ import "."
 import "../../mobile/BaseElements"
 import "../../mobile/SettingsPage"
 
-Page {
+BaseSettingsPage {
     id: root
 
-    header: PageHeaderWithBackArrow {
-        pageTitle: appWindow.btS.settingsTitle
-        onPopPage: root.StackView.view.pop()
-    }
+    title: appWindow.btS.settingsTitle
 
-    Rectangle {
-        id: settingsWraper
-        color: "transparent"
+    Flickable
+    {
         anchors.fill: parent
+        flickableDirection: Flickable.VerticalFlick
+        ScrollIndicator.vertical: ScrollIndicator { }
+        boundsBehavior: Flickable.StopAtBounds
 
-        Flickable
-        {
-            anchors.fill: parent
-            flickableDirection: Flickable.VerticalFlick
-            ScrollIndicator.vertical: ScrollIndicator { }
-            boundsBehavior: Flickable.StopAtBounds
+        contentHeight: contentColumn.height
 
-            contentHeight: contentColumn.height
+        clip: true
 
-            clip: true
+        Column {
+            id: contentColumn
+            anchors.left: parent.left
+            anchors.right: parent.right
+            topPadding: appWindow.theme_v2.mainContentMargins*appWindow.zoom
 
-            Column {
-                id: contentColumn
+            //-- contentColumn content - BEGIN -------------------------------------------------------------------
+
+            RowLayout {
                 anchors.left: parent.left
                 anchors.right: parent.right
-                topPadding: 7
+                anchors.leftMargin: (appWindow.uiver === 1 ? 20 : appWindow.theme_v2.mainContentMargins)*appWindow.zoom
+                anchors.rightMargin: anchors.leftMargin
+                spacing: 10*appWindow.zoom
 
-//-- contentColumn content - BEGIN -------------------------------------------------------------------
+                BasePageLabel {
+                    text: qsTr("Encryption:") + App.loc.emptyString
+                    wrapMode: Text.Wrap
+                    Layout.alignment: Qt.AlignVCenter
+                    Layout.fillWidth: true
+                    Layout.minimumWidth: Math.ceil(implicitWidth)
+                    font: uicore.buildFont({}, (appWindow.uiver === 1 ? 16 : appWindow.theme_v2.fontSize)*appWindow.fontZoom)
+                }
 
-                RowLayout {
-                    anchors.left: parent.left
-                    anchors.leftMargin: 20
-                    spacing: 10
-                    width: parent.width - 20 - 10
-
-                    BaseLabel {
-                        text: qsTr("Encryption:") + App.loc.emptyString
-                        Layout.alignment: Qt.AlignVCenter
-                        font.pixelSize: 16
-                    }
-
-                    Item {implicitWidth: 1; implicitHeight: 1; Layout.fillWidth: true}
-
-                    BaseComboBox {
-                        Layout.alignment: Qt.AlignVCenter
-                        Layout.fillWidth: true
-                        Layout.preferredWidth: implicitWidth
-                        Layout.maximumWidth: implicitWidth
-                        model: [
-                            {text: qsTr("No encryption allowed") + App.loc.emptyString, value: AbstractDownloadsUi.NoEncryptionAllowed},
-                            {text: qsTr("Prefer encryption") + App.loc.emptyString, value: AbstractDownloadsUi.PreferEncryption},
-                            {text: qsTr("Require encryption") + App.loc.emptyString, value: AbstractDownloadsUi.RequireEncryption},
-                        ]
-                        currentIndex: {
-                            let v = parseInt(App.settings.dmcore.value(DmCoreSettings.BtEncryptionPolicy));
-                            for (let i = 0; i < model.length; ++i) {
-                                if (model[i].value === v)
-                                    return i;
-                            }
-                            return 0;
+                BaseComboBox {
+                    Layout.alignment: Qt.AlignVCenter
+                    Layout.fillWidth: true
+                    Layout.preferredWidth: implicitWidth
+                    Layout.maximumWidth: Math.ceil(implicitWidth)
+                    model: [
+                        {text: qsTr("No encryption allowed") + App.loc.emptyString, value: AbstractDownloadsUi.NoEncryptionAllowed},
+                        {text: qsTr("Prefer encryption") + App.loc.emptyString, value: AbstractDownloadsUi.PreferEncryption},
+                        {text: qsTr("Require encryption") + App.loc.emptyString, value: AbstractDownloadsUi.RequireEncryption},
+                    ]
+                    currentIndex: {
+                        let v = parseInt(App.settings.dmcore.value(DmCoreSettings.BtEncryptionPolicy));
+                        for (let i = 0; i < model.length; ++i) {
+                            if (model[i].value === v)
+                                return i;
                         }
-                        onActivated: (index) => App.settings.dmcore.setValue(DmCoreSettings.BtEncryptionPolicy, model[index].value.toString())
+                        return 0;
                     }
-
-                    Item {implicitWidth: 20; implicitHeight: 1}
+                    onActivated: (index) => App.settings.dmcore.setValue(DmCoreSettings.BtEncryptionPolicy, model[index].value.toString())
                 }
-
-                Item {implicitHeight: 10; implicitWidth: 1}
-
-                SettingsSeparator{}
-
-                SwitchSetting {
-                    description: App.my_BT_qsTranslate("Settings", "Enable DHT to find more peers") + App.loc.emptyString
-                    switchChecked: App.settings.toBool(App.settings.dmcore.value(DmCoreSettings.BtEnableDht))
-                    onClicked: {
-                        switchChecked = !switchChecked;
-                        App.settings.dmcore.setValue(DmCoreSettings.BtEnableDht,
-                                                     App.settings.fromBool(switchChecked));
-                    }
-                }
-
-                SettingsSeparator{}
-
-                SwitchSetting {
-                    description: App.my_BT_qsTranslate("Settings", "Enable PeX to find more peers") + App.loc.emptyString
-                    switchChecked: App.settings.toBool(App.settings.dmcore.value(DmCoreSettings.BtEnablePex))
-                    onClicked: {
-                        switchChecked = !switchChecked;
-                        App.settings.dmcore.setValue(DmCoreSettings.BtEnablePex,
-                                                     App.settings.fromBool(switchChecked));
-                        pexRestartRequired.visible = true;
-                    }
-                }
-
-                RestartRequiredLabel {
-                    id: pexRestartRequired
-                    visible: false
-                    leftPadding: qtbug.leftPadding(20, 0)
-                    rightPadding: qtbug.rightPadding(20, 0)
-                }
-
-                Item {
-                    implicitWidth: 1
-                    implicitHeight: 10
-                    visible: pexRestartRequired.visible
-                }
-
-                SettingsSeparator{}
-
-                SwitchSetting {
-                    description: App.my_BT_qsTranslate("Settings", "Enable Local Peer Discovery to find more peers") + App.loc.emptyString
-                    switchChecked: App.settings.toBool(App.settings.dmcore.value(DmCoreSettings.BtEnableLsd))
-                    onClicked: {
-                        switchChecked = !switchChecked;
-                        App.settings.dmcore.setValue(DmCoreSettings.BtEnableLsd,
-                                                     App.settings.fromBool(switchChecked));
-                    }
-                }
-
-                SettingsSeparator{}
-
-                SwitchSetting {
-                    description: App.my_BT_qsTranslate("Settings", "Enable uTP") + App.loc.emptyString
-                    switchChecked: App.settings.toBool(App.settings.dmcore.value(DmCoreSettings.BtEnableUtp))
-                    onClicked: {
-                        switchChecked = !switchChecked;
-                        App.settings.dmcore.setValue(DmCoreSettings.BtEnableUtp,
-                                                     App.settings.fromBool(switchChecked));
-                    }
-                }
-
-                SettingsSeparator{}
-
-                SwitchSetting {
-                    id: useSystemDefinedPort
-                    description: App.my_BT_qsTranslate("Settings", "Use system defined port for incoming connections") + App.loc.emptyString
-                    switchChecked: (parseInt(App.settings.dmcore.value(DmCoreSettings.BtSessionPort)) || 0) <= 0
-                    onClicked: {
-                        switchChecked = !switchChecked;
-                        applySettings();
-                        if (!switchChecked)
-                        {
-                            customPortText.forceActiveFocus();
-                            customPortText.selectAll();
-                        }
-                        else
-                        {
-                            useSystemDefinedPort.forceActiveFocus();
-                        }
-                    }
-                }
-
-                BaseLabel {
-                    visible: useSystemDefinedPort.switchChecked && btTools.item.sessionPort > 0
-                    text: qsTr("Current port: %1").arg(btTools.item.sessionPort) + App.loc.emptyString
-                    leftPadding: qtbug.leftPadding(40, 0)
-                    rightPadding: qtbug.rightPadding(40, 0)
-                    bottomPadding: 10
-                }
-
-                Row {
-                    visible: !useSystemDefinedPort.switchChecked
-                    leftPadding: qtbug.leftPadding(40, 0)
-                    rightPadding: qtbug.rightPadding(40, 0)
-                    spacing: 20
-
-                    Label {
-                        text: qsTr("Custom port:") + App.loc.emptyString
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-
-                    TextField {
-                        id: customPortText
-                        implicitWidth: 60
-                        inputMethodHints: Qt.ImhDigitsOnly
-                        validator: RegularExpressionValidator { regularExpression: /\d+/ }
-                        text: App.settings.dmcore.value(DmCoreSettings.BtSessionPort)
-                        onTextChanged: applySettings()
-                    }
-                }
-
-                SwitchSetting {
-                    description: App.my_BT_qsTranslate("Settings", "Use UPnP / NAT-PMP port forwarding") + App.loc.emptyString
-                    switchChecked: App.settings.toBool(App.settings.dmcore.value(DmCoreSettings.BtEnablePortForwarding))
-                    onClicked: {
-                        switchChecked = !switchChecked;
-                        App.settings.dmcore.setValue(DmCoreSettings.BtEnablePortForwarding,
-                                                     App.settings.fromBool(switchChecked));
-                    }
-                }
-
-                SettingsSeparator{}
-
-                SwitchSetting {
-                    id: enableTrackerList
-                    description: App.my_BT_qsTranslate("Settings", "Enable list of predefined trackers") + App.loc.emptyString
-                    switchChecked: parseInt(App.settings.dmcore.value(DmCoreSettings.BtEnableTrackerList))
-                    onClicked: {
-                        switchChecked = !switchChecked;
-                        App.settings.dmcore.setValue(
-                                    DmCoreSettings.BtEnableTrackerList,
-                                    App.settings.fromBool(switchChecked));
-                        if (!switchChecked)
-                            trackerList.forceActiveFocus();
-                        else
-                            enableTrackerList.forceActiveFocus();
-                    }
-                }
-
-                Column
-                {
-                    visible: enableTrackerList.switchChecked
-
-                    width: root.width
-
-                    spacing: 10
-
-                    BaseLabel
-                    {
-                        anchors.left: parent.left
-                        anchors.leftMargin: 20
-                        text: qsTr("The use of additional trackers can improve download speed in some cases. Lists of such trackers can be retrieved from different sources, e.g. from <a href='https://github.com/ngosang/trackerslist'>here</a>.") + App.loc.emptyString
-                        width: parent.width - 2*20
-                        wrapMode: Text.WordWrap
-                        onLinkActivated: Qt.openUrlExternally(link)
-                    }
-
-                    BaseStringListArea
-                    {
-                        id: trackerList
-                        anchors.left: parent.left
-                        anchors.leftMargin: 20
-                        width: parent.width - 2*20
-                        height: 200
-                        isValidItem: function(str) {
-                            return str.startsWith("http://") ||
-                                    str.startsWith("https://") ||
-                                    str.startsWith("udp://") ||
-                                    str.startsWith("ws://") ||
-                                    str.startsWith("wss://");
-                        }
-                        Component.onCompleted: {
-                            setString(App.settings.dmcore.value(DmCoreSettings.BtTrackerList));
-                        }
-                        Component.onDestruction: {
-                            App.settings.dmcore.setValue(
-                                        DmCoreSettings.BtTrackerList,
-                                        getString());
-                        }
-                    }
-                }
-
-                SettingsSeparator{}
-
-                Item {
-                    width: 1
-                    height: 20
-                }
-
-//-- contentColumn content - END ---------------------------------------------------------------------
             }
 
+            Item {implicitHeight: 10; implicitWidth: 1}
+
+            SettingsSeparator{
+                visible: appWindow.uiver === 1
+            }
+
+            SwitchSetting {
+                description: App.my_BT_qsTranslate("Settings", "Enable DHT to find more peers") + App.loc.emptyString
+                switchChecked: App.settings.toBool(App.settings.dmcore.value(DmCoreSettings.BtEnableDht))
+                onClicked: {
+                    switchChecked = !switchChecked;
+                    App.settings.dmcore.setValue(DmCoreSettings.BtEnableDht,
+                                                 App.settings.fromBool(switchChecked));
+                }
+            }
+
+            SettingsSeparator{
+                visible: appWindow.uiver === 1
+            }
+
+            SwitchSetting {
+                description: App.my_BT_qsTranslate("Settings", "Enable PeX to find more peers") + App.loc.emptyString
+                switchChecked: App.settings.toBool(App.settings.dmcore.value(DmCoreSettings.BtEnablePex))
+                onClicked: {
+                    switchChecked = !switchChecked;
+                    App.settings.dmcore.setValue(DmCoreSettings.BtEnablePex,
+                                                 App.settings.fromBool(switchChecked));
+                    pexRestartRequired.visible = true;
+                }
+            }
+
+            RestartRequiredLabel {
+                id: pexRestartRequired
+                visible: false
+                leftPadding: qtbug.leftPadding(20, 0)
+                rightPadding: qtbug.rightPadding(20, 0)
+            }
+
+            Item {
+                implicitWidth: 1
+                implicitHeight: 10
+                visible: pexRestartRequired.visible
+            }
+
+            SettingsSeparator{
+                visible: appWindow.uiver === 1
+            }
+
+            SwitchSetting {
+                description: App.my_BT_qsTranslate("Settings", "Enable Local Peer Discovery to find more peers") + App.loc.emptyString
+                switchChecked: App.settings.toBool(App.settings.dmcore.value(DmCoreSettings.BtEnableLsd))
+                onClicked: {
+                    switchChecked = !switchChecked;
+                    App.settings.dmcore.setValue(DmCoreSettings.BtEnableLsd,
+                                                 App.settings.fromBool(switchChecked));
+                }
+            }
+
+            SettingsSeparator{
+                visible: appWindow.uiver === 1
+            }
+
+            SwitchSetting {
+                description: App.my_BT_qsTranslate("Settings", "Enable uTP") + App.loc.emptyString
+                switchChecked: App.settings.toBool(App.settings.dmcore.value(DmCoreSettings.BtEnableUtp))
+                onClicked: {
+                    switchChecked = !switchChecked;
+                    App.settings.dmcore.setValue(DmCoreSettings.BtEnableUtp,
+                                                 App.settings.fromBool(switchChecked));
+                }
+            }
+
+            SettingsSeparator{
+                visible: appWindow.uiver === 1
+            }
+
+            SwitchSetting {
+                id: useSystemDefinedPort
+                description: App.my_BT_qsTranslate("Settings", "Use system defined port for incoming connections") + App.loc.emptyString
+                switchChecked: (parseInt(App.settings.dmcore.value(DmCoreSettings.BtSessionPort)) || 0) <= 0
+                onClicked: {
+                    switchChecked = !switchChecked;
+                    applySettings();
+                    if (!switchChecked)
+                    {
+                        customPortText.forceActiveFocus();
+                        customPortText.selectAll();
+                    }
+                    else
+                    {
+                        useSystemDefinedPort.forceActiveFocus();
+                    }
+                }
+            }
+
+            BaseLabel {
+                visible: useSystemDefinedPort.switchChecked && btTools.item.sessionPort > 0
+                text: qsTr("Current port: %1").arg(btTools.item.sessionPort) + App.loc.emptyString
+                leftPadding: qtbug.leftPadding(40, 0)
+                rightPadding: qtbug.rightPadding(40, 0)
+                bottomPadding: 10
+            }
+
+            Row {
+                visible: !useSystemDefinedPort.switchChecked
+                leftPadding: qtbug.leftPadding(40, 0)
+                rightPadding: qtbug.rightPadding(40, 0)
+                spacing: 20
+
+                BasePageLabel {
+                    text: qsTr("Custom port:") + App.loc.emptyString
+                    anchors.verticalCenter: parent.verticalCenter
+                    font: uicore.buildFont({}, uicore.fontSizeV1(16*appWindow.fontZoom))
+                }
+
+                BaseTextField {
+                    id: customPortText
+                    implicitWidth: 60
+                    inputMethodHints: Qt.ImhDigitsOnly
+                    validator: RegularExpressionValidator { regularExpression: /\d+/ }
+                    text: App.settings.dmcore.value(DmCoreSettings.BtSessionPort)
+                    onTextChanged: applySettings()
+                }
+            }
+
+            SwitchSetting {
+                description: App.my_BT_qsTranslate("Settings", "Use UPnP / NAT-PMP port forwarding") + App.loc.emptyString
+                switchChecked: App.settings.toBool(App.settings.dmcore.value(DmCoreSettings.BtEnablePortForwarding))
+                onClicked: {
+                    switchChecked = !switchChecked;
+                    App.settings.dmcore.setValue(DmCoreSettings.BtEnablePortForwarding,
+                                                 App.settings.fromBool(switchChecked));
+                }
+            }
+
+            SettingsSeparator{
+                visible: appWindow.uiver === 1
+            }
+
+            SwitchSetting {
+                id: enableTrackerList
+                description: App.my_BT_qsTranslate("Settings", "Enable list of predefined trackers") + App.loc.emptyString
+                switchChecked: parseInt(App.settings.dmcore.value(DmCoreSettings.BtEnableTrackerList))
+                onClicked: {
+                    switchChecked = !switchChecked;
+                    App.settings.dmcore.setValue(
+                                DmCoreSettings.BtEnableTrackerList,
+                                App.settings.fromBool(switchChecked));
+                    if (!switchChecked)
+                        trackerList.forceActiveFocus();
+                    else
+                        enableTrackerList.forceActiveFocus();
+                }
+            }
+
+            Column
+            {
+                visible: enableTrackerList.switchChecked
+
+                width: root.width
+
+                spacing: 10
+
+                BaseLabel
+                {
+                    anchors.left: parent.left
+                    anchors.leftMargin: 20
+                    text: qsTr("The use of additional trackers can improve download speed in some cases. Lists of such trackers can be retrieved from different sources, e.g. from <a href='https://github.com/ngosang/trackerslist'>here</a>.") + App.loc.emptyString
+                    width: parent.width - 2*20
+                    wrapMode: Text.WordWrap
+                    onLinkActivated: Qt.openUrlExternally(link)
+                }
+
+                BaseStringListArea
+                {
+                    id: trackerList
+                    anchors.left: parent.left
+                    anchors.leftMargin: 20
+                    width: parent.width - 2*20
+                    height: 200
+                    isValidItem: function(str) {
+                        return str.startsWith("http://") ||
+                                str.startsWith("https://") ||
+                                str.startsWith("udp://") ||
+                                str.startsWith("ws://") ||
+                                str.startsWith("wss://");
+                    }
+                    Component.onCompleted: {
+                        setString(App.settings.dmcore.value(DmCoreSettings.BtTrackerList));
+                    }
+                    Component.onDestruction: {
+                        App.settings.dmcore.setValue(
+                                    DmCoreSettings.BtTrackerList,
+                                    getString());
+                    }
+                }
+            }
+
+            Item {
+                width: 1
+                height: 10*appWindow.zoom
+            }
+
+            //-- contentColumn content - END ---------------------------------------------------------------------
         }
+
     }
 
     function applySettings()

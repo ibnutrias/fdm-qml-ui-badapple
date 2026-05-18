@@ -1,15 +1,16 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Layouts
 import org.freedownloadmanager.fdm
 import org.freedownloadmanager.fdm.appsettings
 import org.freedownloadmanager.fdm.dmcoresettings
 import "../BaseElements"
 
-Rectangle {
+Item {
     id: root
-    width: parent.width
-    implicitHeight: Math.max(folderBtn.height + 20, downloadFolder.implicitHeight)
-    color: "transparent"
+
+    implicitWidth: ct.implicitWidth
+    implicitHeight: ct.implicitHeight
 
     QtObject {
         id: d
@@ -42,61 +43,86 @@ Rectangle {
         }
     }
 
-    BaseComboBox {
-        id: downloadFolder
-        enabled: root.enabled
-        editable: true
-        implicitHeight: contentItem.implicitHeight
-        anchors.left: parent.left
-        anchors.leftMargin: 20
-        anchors.right: folderBtn.left
-        anchors.rightMargin: 10
-        anchors.verticalCenter: parent.verticalCenter
-        fontSize: 13
-        onEditTextChanged: root.apply()
-        contentItem: BaseTextField {
-            text: downloadFolder.displayText
-            color: (!d.isCurrentPathInvalid || d.checkingPath) ? appWindow.theme.foreground : appWindow.theme.errorMessage
-            leftPadding: qtbug.leftPadding(10, 0)
-            rightPadding: qtbug.rightPadding(10, 0)
-            font: downloadFolder.font
-            opacity: enabled ? 1 : 0.5
-            selectByMouse: true
-            wrapMode: Text.WrapAnywhere
-            inputMethodHints: Qt.ImhNoAutoUppercase | Qt.ImhNoPredictiveText | Qt.ImhSensitiveData
-            horizontalAlignment: TextField.AlignLeft
-        }
-        background: Rectangle {
-            color: appWindow.theme.background
-        }
-        Connections {
-            target: filePicker
-            onFolderSelected: {
-                onFolderSelected: updateCurrentFolder(folderName)
+    ColumnLayout
+    {
+        id: ct
+
+        anchors.fill: parent
+
+        RowLayout
+        {
+            Layout.fillWidth: true
+
+            BaseComboBox {
+                id: downloadFolder
+                enabled: root.enabled
+                editable: true
+                Layout.preferredHeight: contentItem.implicitHeight
+                Layout.fillWidth: true
+                font: uicore.buildFont({}, uicore.fontSizeV1(13)*appWindow.fontZoom)
+                onEditTextChanged: root.apply()
+                contentItem: BaseTextField {
+                    text: downloadFolder.displayText
+                    color: (!d.isCurrentPathInvalid || d.checkingPath) ?
+                               (appWindow.uiver === 1 ? appWindow.theme.foreground : appWindow.theme_v2.textColor) :
+                               (appWindow.uiver === 1 ? appWindow.theme.errorMessage : appWindow.theme_v2.danger)
+                    leftPadding: qtbug.leftPadding(10, 0)
+                    rightPadding: qtbug.rightPadding(10, 0)
+                    font: downloadFolder.font
+                    opacity: enabled ? 1 : 0.5
+                    selectByMouse: true
+                    wrapMode: Text.WrapAnywhere
+                    inputMethodHints: Qt.ImhNoAutoUppercase | Qt.ImhNoPredictiveText | Qt.ImhSensitiveData
+                    horizontalAlignment: TextField.AlignLeft
+                    background_V2: Item {}
+                }
+                background: Rectangle {
+                    color: appWindow.uiver === 1 ?
+                               appWindow.theme.background :
+                               appWindow.theme_v2.bgColor
+                }
+                Connections {
+                    target: filePicker
+                    onFolderSelected: {
+                        onFolderSelected: updateCurrentFolder(folderName)
+                    }
+                }
+            }
+
+            DialogFlatButton
+            {
+                visible: !App.rc.client.active
+                opacity: enabled ? 1 : (appWindow.uiver === 1 ? 0.5 : appWindow.theme_v2.opacityDisabled)
+                iconSource: Qt.resolvedUrl(appWindow.uiver === 1 ?
+                                               "../../images/download-item/folder.svg" :
+                                               "../V2/open_folder.svg")
+                onClicked: {
+                    var currentPath = App.localEncodePath(longUrl(downloadFolder.editText.trim()));
+                    stackView.waPush(filePicker.filePickerPageComponent, {folder: currentPath, initiator: "downloadsSettings", downloadId: -1});
+                }
+            }
+
+            DialogButton {
+                visible: appWindow.uiver === 1
+                text: qsTr("Macros") + App.loc.emptyString
+                enabled: root.enabled
+                radius: 20
+                Layout.preferredHeight: 40*appWindow.zoom
+                opacity: enabled ? 1 : 0.5
+                onClicked: macrosMenu.openFor(this)
             }
         }
-    }
 
-    RoundButton {
-        id: folderBtn
-        visible: !App.rc.client.active
-        enabled: root.enabled
-        anchors.verticalCenter: parent.verticalCenter
-        radius: 40
-        width: 40
-        height: 40
-        flat: true
-        onClicked: {
-            var currentPath = App.localEncodePath(longUrl(downloadFolder.editText.trim()));
-            stackView.waPush(filePicker.filePickerPageComponent, {folder: currentPath, initiator: "downloadsSettings", downloadId: -1, onlyFolders: true});
+        BaseLabel
+        {
+            visible: appWindow.uiver !== 1
+            text: qsTr("Macros") + App.loc.emptyString
+            color: appWindow.theme_v2.primary
+            MouseArea {
+                anchors.fill: parent
+                onClicked: macrosMenu.openFor(parent)
+            }
         }
-        icon.source: Qt.resolvedUrl("../../images/download-item/folder.svg")
-        icon.color: appWindow.theme.foreground
-        icon.width: 18
-        icon.height: 18
-        opacity: enabled ? 1 : 0.5
-        anchors.right: macrosBtn.left
-        anchors.rightMargin: 10
     }
 
     Connections {
@@ -109,25 +135,16 @@ Rectangle {
         }
     }
 
-    DialogButton {
-        id: macrosBtn
-        text: qsTr("Macros") + App.loc.emptyString
-        enabled: root.enabled
-        radius: 20
-        height: 40
-        flat: true
-        opacity: enabled ? 1 : 0.5
-        anchors.right: parent.right
-        anchors.rightMargin: 20
-        anchors.verticalCenter: parent.verticalCenter
-
-        onClicked: macrosMenu.open()
-
-        MacrosMenu {
-            id: macrosMenu
-            onMacroSelected: (macro) => {
-                updateCurrentFolder(downloadFolder.editText + macro)
-            }
+    MacrosMenu {
+        id: macrosMenu
+        onMacroSelected: (macro) => {
+            updateCurrentFolder(downloadFolder.editText + macro)
+        }
+        function openFor(item) {
+            let pt = item.mapToItem(parent, 0, 0);
+            x = pt.x;
+            y = pt.y;
+            open();
         }
     }
 

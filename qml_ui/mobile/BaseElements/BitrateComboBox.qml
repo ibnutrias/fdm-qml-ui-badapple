@@ -20,7 +20,7 @@ BaseComboBox
                    root.kbpsText(999, "") :
                    root.vbrKbpsText(999,999)).width
 
-    FontMetrics {id: fontMetrics; font.pixelSize: root.fontSize}
+    FontMetrics {id: fontMetrics; font: root.font}
 
     onMaxComboWidthChanged: root.setPopupWidth()
 
@@ -35,8 +35,7 @@ BaseComboBox
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
             text: modelData.text
-            font.pixelSize: root.fontSize
-            font.weight: index === currentIndex ? Font.DemiBold : Font.Normal
+            font: uicore.adjustFont(root.font, {weight: index === currentIndex ? Font.DemiBold : Font.Normal})
             wrapMode: Text.WrapAtWordBoundaryOrAnywhere
             width: parent.width
         }
@@ -175,7 +174,7 @@ BaseComboBox
 
     TextMetrics {
         id: textMetrics
-        font.pixelSize: root.fontSize
+        font: root.font
     }
 
     Connections {

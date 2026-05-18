@@ -2,14 +2,24 @@ import QtQuick
 import QtQuick.Controls
 
 Label {
-    property bool enabled: true
-
-    linkColor: appWindow.theme.link
-    font.pixelSize: getPointSize()
-    horizontalAlignment: Text.AlignLeft
+    id: label
 
     property bool adaptive: false
     property int labelSize: adaptiveTools.labelSize.smallSize
+
+    opacity: enabled ? 1 : (appWindow.uiver === 1 ? 0.5 : appWindow.theme_v2.opacityDisabled)
+
+    color: appWindow.uiver === 1 ?
+               appWindow.theme.foreground :
+               appWindow.theme_v2.textColor
+
+    linkColor: appWindow.uiver === 1 ?
+                   appWindow.theme.link :
+                   appWindow.theme_v2.primary
+
+    font: uicore.buildFont({}, uicore.fontSizeV1(getPointSize())*appWindow.fontZoom)
+
+    horizontalAlignment: Text.AlignLeft
 
     function getPointSize()
     {

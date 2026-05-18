@@ -169,6 +169,13 @@ BaseContextMenu {
     }
 
     BaseContextMenuItem {
+        visible: App.features.hasFeature(AppFeatures.Donate)
+        text: uicore.supportTheProjectText
+        externalLink: true
+        onTriggered: App.donate.onDonateDialogAccepted()
+    }
+
+    BaseContextMenuItem {
         visible: appWindow.updateSupported
         text: remove3dots(qsTr("Check for updates...")) + App.loc.emptyString
         onTriggered: appWindow.checkForUpdatesRequested()

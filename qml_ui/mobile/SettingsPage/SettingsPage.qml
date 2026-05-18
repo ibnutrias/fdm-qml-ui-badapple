@@ -2,189 +2,206 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Controls.Material
-import "../Dialogs"
 import org.freedownloadmanager.fdm
 import org.freedownloadmanager.fdm.dmcoresettings
 import org.freedownloadmanager.fdm.appsettings
 import org.freedownloadmanager.fdm.tum
-import "../BaseElements/"
+import "../Dialogs"
+import "../BaseElements"
+import "../BaseElements/V2"
+import "../V2"
 import "../../common"
 
-Page
+BaseSettingsPage
 {
     id: root
 
-    //property string lastInvalidSettingsMessage: ""
+    title: qsTr("Settings") + App.loc.emptyString
+    isRoot: true
 
-    header: PageHeaderWithBackArrow {
-        pageTitle: qsTr("Settings") + App.loc.emptyString
-        onPopPage: root.StackView.view.pop()
-        onClickedNtimes: uiSettingsTools.settings.showTroubleshootingUi = true
-    }
-
-//----------- Settings content - BEGIN ----------------
-Rectangle {
-    id: settingsWraper
-    color: appWindow.theme.generalSettingsBackground
-    anchors.fill: parent
-
-    ColumnLayout {
+    Flickable
+    {
         anchors.fill: parent
-        spacing: 0
 
-        Flickable
+        flickableDirection: Flickable.VerticalFlick
+        ScrollIndicator.vertical: ScrollIndicator { }
+        boundsBehavior: Flickable.StopAtBounds
+
+        contentWidth: width
+        contentHeight: all.height
+
+        clip: true
+
+        ColumnLayout
         {
-            id: flick
+            id: all
+            spacing: 0
+            width: parent.width
 
-            Layout.fillWidth: true
-            Layout.fillHeight: true
+            //General settings
+            GeneralSettings {
+                Layout.fillWidth: true
+            }
+            Item {implicitHeight: 7; implicitWidth: 1}
 
-            Layout.leftMargin: appWindow.showBordersInDownloadsList ? settingsWraper.width * 0.1 : 0
-            Layout.rightMargin: appWindow.showBordersInDownloadsList ? settingsWraper.width * 0.1 : 0
+            Rectangle {
+                id: contentColumnRect
+                Layout.fillWidth: true
+                Layout.preferredHeight: contentColumn.height
+                color: appWindow.uiver === 1 ?
+                           appWindow.theme.background :
+                           appWindow.theme_v2.bgColor
+                radius: (appWindow.uiver === 1 ? 26 : 16)*appWindow.zoom
 
-            flickableDirection: Flickable.VerticalFlick
-            ScrollIndicator.vertical: ScrollIndicator { }
-            boundsBehavior: Flickable.StopAtBounds
+                Column {
+                    id: contentColumn
 
-            contentWidth: width
-            contentHeight: all.height
+                    anchors.left: parent.left
+                    anchors.right: parent.right
 
-            clip: true
+                    GeneralSettings2 {}
 
-            ColumnLayout
-            {
-                id: all
-                spacing: 0
-                width: parent.width
-
-                //General settings
-                GeneralSettings {
-                    Layout.fillWidth: true
-                }
-                Item {implicitHeight: 7; implicitWidth: 1}
-
-                Rectangle {
-                    id: contentColumnRect
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: contentColumn.height
-                    color: appWindow.theme.background
-                    radius: 26
-
-                    Column {
-                        id: contentColumn
-
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-
-                        GeneralSettings2 {}
-
-                        //Downloads settings
-                        SettingsItem {
-                            visible: appWindow.hasDownloadMgr
-                            description: qsTr("Downloads settings") + App.loc.emptyString
-                            onClicked: stackView.waPush(Qt.resolvedUrl("DownloadsSettings.qml"))
-                            textWeight: Font.Bold
-                        }
-
-                        SettingsSeparator{
-                            visible: appWindow.hasDownloadMgr
-                        }
-
-                        //Proxy settings
-                        SettingsItem {
-                            description: qsTr("Network settings") + App.loc.emptyString
-                            onClicked: stackView.waPush(Qt.resolvedUrl("NetworkSettings.qml"))
-                            textWeight: Font.Bold
-                        }
-
-                        SettingsSeparator{}
-
-                        //Traffic settings
-                        SettingsItem {
-                            visible: appWindow.hasDownloadMgr
-                            description: qsTr("Traffic limits") + App.loc.emptyString
-                            onClicked: stackView.waPush(Qt.resolvedUrl("TrafficLimitsSettings.qml"))
-                            textWeight: Font.Bold
-                        }
-
-                        SettingsSeparator{
-                            visible: appWindow.hasDownloadMgr
-                        }
-
-                        SettingsItem {
-                            visible: appWindow.hasDownloadMgr
-                            description: qsTr("Sounds settings") + App.loc.emptyString
-                            onClicked: stackView.waPush(Qt.resolvedUrl("SoundsSettings.qml"))
-                            textWeight: Font.Bold
-                        }
-
-                        SettingsSeparator{
-                            visible: appWindow.hasDownloadMgr
-                        }
-
-                        SettingsItem {
-                            visible: appWindow.btSupported
-                            description: appWindow.btSupported ? appWindow.btS.settingsTitle : ""
-                            onClicked: stackView.waPush(Qt.resolvedUrl("../../bt/mobile/BtSettings.qml"))
-                            textWeight: Font.Bold
-                        }
-
-                        SettingsSeparator {
-                            visible: appWindow.btSupported
-                        }
-
-                        SettingsItem {
-                            description: qsTr("Remote control settings") + App.loc.emptyString
-                            onClicked: stackView.waPush(Qt.resolvedUrl("RemoteControlSettings.qml"))
-                            textWeight: Font.Bold
-                        }
-
-                        SettingsSeparator{}
-
-                        SettingsItem {
-                            description: qsTr("Advanced settings") + App.loc.emptyString
-                            onClicked: stackView.waPush(Qt.resolvedUrl("AdvancedSettings.qml"))
-                            textWeight: Font.Bold
-                        }
-
-                        SettingsSeparator{
-                            visible: uiSettingsTools.settings.showTroubleshootingUi
-                        }
-                        SettingsItem {
-                            visible: uiSettingsTools.settings.showTroubleshootingUi
-                            description: qsTr("Troubleshooting") + App.loc.emptyString
-                            onClicked: stackView.waPush(Qt.resolvedUrl("TroubleshootingSettings.qml"))
-                            textWeight: Font.Bold
-                        }
+                    //Downloads settings
+                    SettingsItem {
+                        visible: appWindow.hasDownloadMgr
+                        description: qsTr("Downloads settings") + App.loc.emptyString
+                        onClicked: stackView.waPush(Qt.resolvedUrl("DownloadsSettings.qml"))
+                        textWeight: appWindow.uiver === 1 ? Font.Bold : Font.Normal
                     }
-                }
 
-                DialogButton
-                {
-                    Layout.leftMargin: qtbug.leftMargin(10, 0)
-                    Layout.rightMargin: qtbug.rightMargin(10, 0)
-                    enabled: App.settings.hasNonDefaultValues || uiSettingsTools.hasNonDefaultValues
-                    text: qsTr("Reset settings") + App.loc.emptyString
-                    onClicked: okToResetMsg.open()
-                    AppMessageDialog
-                    {
-                        id: okToResetMsg
-                        title: qsTr("Default settings") + App.loc.emptyString
-                        text: qsTr("Restore default settings?") + App.loc.emptyString
-                        buttons: buttonOk | buttonCancel
-                        onOkClicked: {
-                            App.settings.resetToDefaults();
-                            uiSettingsTools.resetToDefaults();
-                            stackView.pop();
-                            stackView.waPush(Qt.resolvedUrl("SettingsPage.qml"));
-                        }
+                    SettingsSeparator{
+                        visible: appWindow.hasDownloadMgr
+                        x: appWindow.uiver === 1 ? 0 : appWindow.theme_v2.mainContentMargins*appWindow.zoom
+                        width: parent.width - 2*x
+                    }
+
+                    //Proxy settings
+                    SettingsItem {
+                        description: qsTr("Network settings") + App.loc.emptyString
+                        onClicked: stackView.waPush(Qt.resolvedUrl("NetworkSettings.qml"))
+                        textWeight: appWindow.uiver === 1 ? Font.Bold : Font.Normal
+                    }
+
+                    SettingsSeparator{
+                        x: appWindow.uiver === 1 ? 0 : appWindow.theme_v2.mainContentMargins*appWindow.zoom
+                        width: parent.width - 2*x
+                    }
+
+                    //Traffic settings
+                    SettingsItem {
+                        visible: appWindow.hasDownloadMgr
+                        description: qsTr("Traffic limits") + App.loc.emptyString
+                        onClicked: stackView.waPush(Qt.resolvedUrl("TrafficLimitsSettings.qml"))
+                        textWeight: appWindow.uiver === 1 ? Font.Bold : Font.Normal
+                    }
+
+                    SettingsSeparator{
+                        visible: appWindow.hasDownloadMgr
+                        x: appWindow.uiver === 1 ? 0 : appWindow.theme_v2.mainContentMargins*appWindow.zoom
+                        width: parent.width - 2*x
+                    }
+
+                    SettingsItem {
+                        visible: appWindow.hasDownloadMgr
+                        description: qsTr("Sounds settings") + App.loc.emptyString
+                        onClicked: stackView.waPush(Qt.resolvedUrl("SoundsSettings.qml"))
+                        textWeight: appWindow.uiver === 1 ? Font.Bold : Font.Normal
+                    }
+
+                    SettingsSeparator{
+                        visible: appWindow.hasDownloadMgr
+                        x: appWindow.uiver === 1 ? 0 : appWindow.theme_v2.mainContentMargins*appWindow.zoom
+                        width: parent.width - 2*x
+                    }
+
+                    SettingsItem {
+                        visible: appWindow.btSupported
+                        description: appWindow.btSupported ? appWindow.btS.settingsTitle : ""
+                        onClicked: stackView.waPush(Qt.resolvedUrl("../../bt/mobile/BtSettings.qml"))
+                        textWeight: appWindow.uiver === 1 ? Font.Bold : Font.Normal
+                    }
+
+                    SettingsSeparator {
+                        visible: appWindow.btSupported
+                        x: appWindow.uiver === 1 ? 0 : appWindow.theme_v2.mainContentMargins*appWindow.zoom
+                        width: parent.width - 2*x
+                    }
+
+                    SettingsItem {
+                        description: qsTr("Remote control settings") + App.loc.emptyString
+                        onClicked: stackView.waPush(Qt.resolvedUrl("RemoteControlSettings.qml"))
+                        textWeight: appWindow.uiver === 1 ? Font.Bold : Font.Normal
+                    }
+
+                    SettingsSeparator{
+                        x: appWindow.uiver === 1 ? 0 : appWindow.theme_v2.mainContentMargins*appWindow.zoom
+                        width: parent.width - 2*x
+                    }
+
+                    SettingsItem {
+                        description: qsTr("Advanced settings") + App.loc.emptyString
+                        onClicked: stackView.waPush(Qt.resolvedUrl("AdvancedSettings.qml"))
+                        textWeight: appWindow.uiver === 1 ? Font.Bold : Font.Normal
+                    }
+
+                    SettingsSeparator{
+                        visible: uiSettingsTools.settings.showTroubleshootingUi
+                        x: appWindow.uiver === 1 ? 0 : appWindow.theme_v2.mainContentMargins*appWindow.zoom
+                        width: parent.width - 2*x
+                    }
+                    SettingsItem {
+                        visible: uiSettingsTools.settings.showTroubleshootingUi
+                        description: qsTr("Troubleshooting") + App.loc.emptyString
+                        onClicked: stackView.waPush(Qt.resolvedUrl("TroubleshootingSettings.qml"))
+                        textWeight: appWindow.uiver === 1 ? Font.Bold : Font.Normal
+                    }
+
+                    SettingsSeparator{
+                        visible: appWindow.uiver !== 1
+                        x: appWindow.uiver === 1 ? 0 : appWindow.theme_v2.mainContentMargins*appWindow.zoom
+                        width: parent.width - 2*x
                     }
                 }
             }
+
+            DialogButton_V1
+            {
+                visible: appWindow.uiver === 1
+                Layout.leftMargin: qtbug.leftMargin(10*appWindow.zoom, 0)
+                Layout.rightMargin: qtbug.rightMargin(10*appWindow.zoom, 0)
+                enabled: App.settings.hasNonDefaultValues || uiSettingsTools.hasNonDefaultValues
+                text: qsTr("Reset settings") + App.loc.emptyString
+                onClicked: okToResetMsg.open()
+            }
+
+            BasePageLabel
+            {
+                enabled: App.settings.hasNonDefaultValues || uiSettingsTools.hasNonDefaultValues
+                visible: appWindow.uiver !== 1
+                text: qsTr("Reset settings") + App.loc.emptyString
+                font: uicore.buildFont({}, (appWindow.theme_v2.fontSize+1)*appWindow.fontZoom)
+                Layout.topMargin: 15*appWindow.zoom
+                Layout.bottomMargin: 25*appWindow.zoom
+                Layout.leftMargin: appWindow.theme_v2.mainContentMargins*appWindow.zoom
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: okToResetMsg.open()
+                }
+            }
         }
-
-
     }
-}
-//----------- Settings content - END ----------------
+
+    AppMessageDialog
+    {
+        id: okToResetMsg
+        title: qsTr("Default settings") + App.loc.emptyString
+        text: qsTr("Restore default settings?") + App.loc.emptyString
+        hasCancelButton: true
+        onOkClicked: {
+            App.settings.resetToDefaults();
+            uiSettingsTools.resetToDefaults();
+            stackView.pop();
+            stackView.waPush(Qt.resolvedUrl("SettingsPage.qml"));
+        }
+    }
 }
