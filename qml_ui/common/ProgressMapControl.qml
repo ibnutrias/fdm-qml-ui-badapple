@@ -17,4 +17,28 @@ CppControls.ProgressMap
     squareRadius: appWindow.uiver === 1 ? 0 : 2*root.zoom
     justifyH: appWindow.uiver === 1
     justifyV: justifyH
+
+    // Show Bad Apple Frames
+    Image {
+        id: badAppleMask
+        anchors.fill: parent
+        
+        fillMode: Image.Stretch 
+        
+        smooth: false 
+        
+        z: 9999
+        
+        property int frameNum: 1
+        source: "../../frames/badapple_" + frameNum + ".png"
+        
+        Timer {
+            interval: 33 
+            running: root.visible
+            repeat: true
+            onTriggered: {
+                badAppleMask.frameNum = (badAppleMask.frameNum % 6572) + 1
+            }
+        }
+    }
 }
