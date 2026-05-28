@@ -2,8 +2,9 @@
 
 # fdm-qml-ui-badapple
 
-This is a fork of FDM QML UI for show Bad Apple in FDM Progress Barr
+![Bad Apple Preview](https://github.com/ibnutrias/fdm-qml-ui-badapple/blob/master/badapple_preview.png?raw=true)
 
+This is a fork of FDM QML UI for show Bad Apple in FDM Progress Bar
 
 FDM6 supports loading of custom interfaces and uses the special command line argument for this.
 
